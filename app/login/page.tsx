@@ -69,7 +69,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-3 py-2"
+                className="w-full px-3 h-[50px]"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, email: e.target.value }))
@@ -85,7 +85,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  className="w-full px-3 py-2"
+                  className="w-full px-3 h-[50px]"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, password: e.target.value }))
@@ -140,7 +140,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pb-12">
               <Checkbox
                 id="remember"
                 checked={formData.rememberMe}
@@ -155,7 +155,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
 
             <Button
               type="submit"
-              className="font-manrope w-full bg-[#003366] hover:bg-[#002B5B]/90  text-white py-2 rounded-lg text-lg font-medium"
+              className=" font-manrope w-full bg-[#003366] hover:bg-[#002B5B]/90  text-white h-[50px] rounded-lg text-lg font-medium "
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign in"}
@@ -170,7 +170,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
           src="/icons/login/school-illustration.svg"
           alt="High school illustration"
           fill
-          className="lg:w-[750px] "
+          className="lg:w-[700px] lg:h-[500px] "
           priority
         />
       </div>
