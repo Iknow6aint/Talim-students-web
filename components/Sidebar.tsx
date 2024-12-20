@@ -27,10 +27,10 @@ const Sidebar: React.FC = () => {
   const pathname = usePathname(); // usePathname is the correct hook for App Router
   
   return (
-    <div className="h-screen w-[266px] font-manrope px-4 pt-8 pb-4 bg-[#FBFBFB] flex flex-col justify-between border-r">
+    <div className=" w-[266px] font-manrope px-4  pb-4 bg-[#FBFBFB] flex flex-col justify-between border-r">
       {/* Header */}
       <div>
-        <div className="flex items-center mb-4">
+        <div className="flex items-center ">
           <div className="text-white p-3 rounded-lg">
             <Image src="/icons/talim.svg" alt="School" width={44.29} height={43.23} />
           </div>
@@ -56,12 +56,12 @@ const Sidebar: React.FC = () => {
                     <div
                       className={`flex items-center px-3 py-2 rounded-md cursor-pointer ${
                         isActive
-                          ? 'bg-blue-100 text-blue-900'
+                          ? 'bg-[#003366] bg-opacity-25 text-[#003366]'
                           : 'text-gray-600 hover:bg-gray-100'
                       }`}
                     >
                       <Image src={item.iconPath} alt={item.label} width={20} height={20} />
-                      <span className="ml-3 font-medium">{item.label}</span>
+                      <span className="font-manrope text-base ml-3 font-medium">{item.label}</span>
                       {item.notification && (
                         <span className="ml-auto bg-blue-900 text-white text-sm w-5 h-5 flex items-center justify-center rounded-full">
                           {item.notification}
