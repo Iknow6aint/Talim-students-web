@@ -40,7 +40,7 @@ const Sidebar: React.FC = () => {
 
         {/* School Selector */}
         <div className="flex items-center px-2 py-3 border-2 border-solid border-[#F1F1F1] bg-[#FBFBFB] rounded-md mb-4">
-          <Image src="/icons/unity.png" alt="School" width={40} height={40} />
+          <Image src="/unity.png" alt="School" width={40} height={40} />
           <span className="ml-2 font-medium text-base text-gray-700">Unity Secondary S...</span>
         </div>
 

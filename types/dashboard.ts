@@ -1,5 +1,6 @@
+import type { ReactNode } from "react"
 export interface MetricCardProps {
-    icon: "book" | "award" | "calendar"
+    icon: ReactNode;
     value: string | number
     label: string
   }

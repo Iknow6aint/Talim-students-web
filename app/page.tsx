@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MetricCard } from "@/components/metric-card"
 import { ScheduleTimeline } from "@/components/schedule-timeline"
 import Layout from '@/components/Layout'
-
+import Image from 'next/image';
 const schedule = [
   { subject: "Mathematics", startTime: "08:00", endTime: "10:00" },
   { subject: "Civic Education", startTime: "10:00", endTime: "11:00" },
@@ -24,8 +24,8 @@ const metrics = {
 export default function DashboardPage() {
   return (
     <Layout>
-      <div className="w-full h-full bg-[#F8F8F8] px-4 overflow-hidden">
-        <div className="h-full mx-auto flex flex-col space-y-5 2xl:space-y-8">
+      <div className="relative w-full h-full bg-[#F8F8F8] px-4 overflow-hidden">
+        <div className="  h-full mx-auto flex flex-col space-y-5 2xl:space-y-8">
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-3">
             <div className="relative w-full max-w-md">
@@ -46,24 +46,25 @@ export default function DashboardPage() {
                 <AvatarFallback className='bg-green-300'>OA</AvatarFallback>
               </Avatar>
             </div>
+            
           </div>
-
+          <div className=" relative top-[-18px] 2xl:top-[-29px] h-[2px] -mx-6  bg-[#E8E8E8]" />
           {/* Overview */}
           <div className="flex-grow ">
             <h2 className="text-xl font-semibold mb-4">Overview</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <MetricCard
-                icon="book"
+                icon={<Image src="/icons/dashboard/subject.svg" width={52} height={52} alt="Subjects Icon" className="h-[52px] w-[52px]" />}
                 value={metrics.subjects}
                 label="Subjects Enrolled"
               />
               <MetricCard
-                icon="award"
+                icon={<img src="/icons/dashboard/award.svg" alt="Award Icon" className="h-[52px] w-[52px]" />}
                 value={`${metrics.gradeScore}%`}
                 label="Grade Score"
               />
               <MetricCard
-                icon="calendar"
+                icon={<img src="/icons/dashboard/calendar.svg" alt="Award Icon" className="h-[52px] w-[52px]" />}
                 value={`${metrics.attendancePercentage}%`}
                 label="Attendance Percentage"
               />
