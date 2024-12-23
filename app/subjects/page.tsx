@@ -1,4 +1,4 @@
-import { Header } from "@/components/Subject/header"
+import { Header } from "@/components/header"
 import { SubjectCard } from "@/components/Subject/subject-card"
 import { Pagination } from "@/components/Subject/pagination"
 import Layout from "@/components/Layout"
