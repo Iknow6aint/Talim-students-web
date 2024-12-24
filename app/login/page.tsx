@@ -1,70 +1,74 @@
-"use client"
+"use client";
 
-import { useState, type FormEvent } from "react"
-import Image from "next/image"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import type { LoginPageProps, LoginFormData } from "./types/auth"
+import { useState, FormEvent } from "react";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
-export default function LoginPage({ onSubmit }: LoginPageProps) {
-  const [showPassword, setShowPassword] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [formData, setFormData] = useState<LoginFormData>({
+// Define the types for form data
+interface FormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
+const LoginPage: React.FC = () => {
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     rememberMe: false,
-  })
+  });
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      await onSubmit?.(formData)
+      // Replace this with actual logic for form submission (e.g., API call)
+      console.log("Form submitted with data:", formData);
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("Login error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const togglePasswordVisibility = (): void => {
-    setShowPassword((prev) => !prev)
-  }
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
-      
-      {/* Left Column - Login Form */}
+      {/* Login Form */}
       <div className="relative flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 lg:py-24">
-      <div className="lg:absolute lg:top-16" >
-            <Image
-              src="/icons/login/tree.svg"
-              alt="Tree Logo"
-              width={64}
-              height={64}
-              className="h-[80px] w-[76.32px]"
-              priority
-            />
-          </div>
+        <div className="lg:absolute lg:top-16">
+          <Image
+            src="/icons/login/tree.svg"
+            alt="Tree Logo"
+            width={64}
+            height={64}
+            className="h-[80px] w-[76.32px]"
+            priority
+          />
+        </div>
         <div className="w-full max-w-[400px] space-y-8">
-          {/* Logo */}
-          
-
-          {/* Welcome Text */}
-          <div className="font-manrope  space-y-4 text-center">
-            <h1 className="text-3xl font-medium  text-3xll text-[#030E18]">Welcome back</h1>
+          <div className="font-manrope space-y-4 text-center">
+            <h1 className="text-3xl font-medium text-[#030E18]">Welcome back</h1>
             <p className="text-lg text-[#444444] font-normal">
               Sign in to continue your learning journey.
             </p>
           </div>
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6 pt-[45px] font-manrope">
-            <div className="space-y-2 ">
-              <Label htmlFor="email" className="text-lg font-medium text-[#030E18]">Email</Label>
+            {/* Email Input */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-lg font-medium text-[#030E18]">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -78,8 +82,11 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               />
             </div>
 
+            {/* Password Input */}
             <div className="space-y-2">
-              <Label htmlFor="password"  className="text-lg font-medium text-[#030E18]">Password</Label>
+              <Label htmlFor="password" className="text-lg font-medium text-[#030E18]">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -96,9 +103,7 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
                   type="button"
                   onClick={togglePasswordVisibility}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  aria-label={
-                    showPassword ? "Hide password" : "Show password"
-                  }
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <svg
@@ -140,22 +145,35 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
               </div>
             </div>
 
+            {/* Remember Me Checkbox */}
             <div className="flex items-center space-x-2 pb-12">
+              {/* <Checkbox
+                id="remember"
+                checked={formData.rememberMe}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, rememberMe: checked }))
+                }
+              /> */}
               <Checkbox
                 id="remember"
                 checked={formData.rememberMe}
-                onCheckedChange={(checked: boolean) =>
-                  setFormData((prev) => ({ ...prev, rememberMe: checked }))
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    rememberMe: checked === true, // Ensure it is a boolean
+                  }))
                 }
               />
+
               <Label htmlFor="remember" className="text-base font-normal text-[#030E18]">
                 Keep me signed in for easy access
               </Label>
             </div>
 
+            {/* Submit Button */}
             <Button
               type="submit"
-              className=" font-manrope w-full bg-[#003366] hover:bg-[#002B5B]/90  text-white h-[50px] rounded-lg text-lg font-medium "
+              className="w-full bg-[#003366] hover:bg-[#002B5B]/90 text-white h-[50px] rounded-lg text-lg font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign in"}
@@ -164,17 +182,18 @@ export default function LoginPage({ onSubmit }: LoginPageProps) {
         </div>
       </div>
 
-      {/* Right Column - Illustration */}
+      {/* Illustration */}
       <div className="flex-1 relative hidden lg:block">
         <Image
           src="/icons/login/school-illustration.svg"
           alt="High school illustration"
           fill
-          className="lg:w-[700px] lg:h-[500px] "
+          className="lg:w-[700px] lg:h-[500px]"
           priority
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
+export default LoginPage;
