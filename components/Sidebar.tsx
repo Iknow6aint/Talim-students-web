@@ -14,7 +14,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: 'Dashboard', iconPath: '/icons/dashboard.svg', link: "/" },
+  { label: 'Dashboard', iconPath: '/icons/dashboard.svg', link: "/dashboard" },
   { label: 'Subjects', iconPath: '/icons/subjects.svg', link: "/subjects" },
   { label: 'Resources', iconPath: '/icons/resources.svg', link: "/resources" },
   { label: 'Timetable', iconPath: '/icons/timetable.svg', link: "/timetable" },
