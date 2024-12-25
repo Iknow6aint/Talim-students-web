@@ -1,13 +1,13 @@
 "use client"
 
-import { Search, Bell } from 'lucide-react'
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { MetricCard } from "@/components/metric-card"
 import { ScheduleTimeline } from "@/components/schedule-timeline"
 import Layout from '@/components/Layout'
 import Image from 'next/image';
 import { Header } from '@/components/header'
+import { GetServerSideProps } from "next";
+import nookies from "nookies";
 const schedule = [
   { subject: "Mathematics", startTime: "08:00", endTime: "10:00" },
   { subject: "Civic Education", startTime: "10:00", endTime: "11:00" },

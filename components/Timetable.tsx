@@ -42,7 +42,7 @@ const Timetable = () => {
         </div>
         <p className="text-gray-500 mb-6">Stay on Track with Your Class Schedule!</p>
 
-        <div className="overflow-x-auto border border-gray-300 rounded-t-3xl lg:h-[500px] 2xl:h-[790px] overflow-y-scroll">
+        <div className="overflow-x-auto border border-gray-300 rounded-t-3xl max-h-[510px] 2xl:max-h-[800px] overflow-y-scroll">
           <div className="grid sticky top-0 z-30" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
             <div className="font-semibold text-center bg-[#FFFFFF] py-6">Time</div>
             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => (

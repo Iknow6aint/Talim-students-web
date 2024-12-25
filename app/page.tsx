@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import nookies from "nookies"; 
 
 interface FormData {
   email: string;
@@ -43,6 +44,9 @@ const LoginPage: React.FC = () => {
         formData.password === dummyCredentials.password
       ) {
         console.log("Login successful!");
+        // Set the auth token as a cookie
+        document.cookie = "authToken=dummyAuthToken; path=/; max-age=604800;"; // 7 days expiry
+
 
         // Redirect after successful login
         router.push("/dashboard"); // Change this to your dashboard route
