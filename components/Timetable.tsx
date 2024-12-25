@@ -36,14 +36,14 @@ const Timetable = () => {
       <div className="mx-auto bg-[#F8F8F8] rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold">Timetable</h1>
-          <Button className="w-full sm:w-auto bg-blue-900 hover:bg-blue-800 py-6">
+          <Button className="w-full sm:w-auto bg-[#003366] hover:bg-blue-800 py-6">
             Download <Download className="mr-2 h-7 w-6" />
           </Button>
         </div>
         <p className="text-gray-500 mb-6">Stay on Track with Your Class Schedule!</p>
 
         <div className="overflow-x-auto border border-gray-300 rounded-t-3xl lg:h-[500px] 2xl:h-[790px] overflow-y-scroll">
-          <div className="grid sticky top-0 z-10" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
+          <div className="grid sticky top-0 z-30" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
             <div className="font-semibold text-center bg-[#FFFFFF] py-6">Time</div>
             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => (
               <div key={index} className="font-semibold text-center bg-[#FFFFFF] py-6 border-l border-gray-300">
@@ -98,7 +98,7 @@ const Timetable = () => {
                     return (
                       <div
                         key={subjectIndex}
-                        className="absolute left-0 right-0 m-1 p-2 rounded shadow-md bg-gray-100 flex items-center justify-center text-center"
+                        className="absolute left-0 right-0 m-1 p-2 rounded shadow-orange-800  bg-[#ffffff] flex items-center justify-center text-center"
                         style={{
                           top: `${topPosition}px`,
                           height: `${subjectHeight}px`,
@@ -118,10 +118,10 @@ const Timetable = () => {
  
             {/* Dynamic Time Indicator Based on Custom Time */}
             <div
-  className="absolute left-[110px] w-[88%] lg:w-[93%]"
+  className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
   style={{
     top: `${currentTimePosition - 7}px `, // Position based on the calculated time
-    zIndex: 30,
+    zIndex: 20,
  
   }}
 >
