@@ -6,9 +6,9 @@ import React from 'react'
 function page() {
   return (
     <Layout><main>
-        <Header/>
-    <Timetable />
-  </main></Layout>
+      <Header />
+      <Timetable />
+    </main></Layout>
   )
 }
 
