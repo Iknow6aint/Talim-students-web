@@ -3,25 +3,44 @@ import MessageBubble from "./PrivateMessageBubble";
 import { Phone, Search, Video } from "lucide-react";
 import MessageInput from "./MessageInput";
 import ChatHeader from "./ChatHeader";
+import ReplyPreview from "./ReplyPreview";
 
 const messages = [
-  { sender: "other", text: "Hi everyone!", time: "3:10pm", type: "text" },
-  { sender: "me", text: "Got it!", time: "3:12pm", type: "text" },
+  { sender: "Mrs Yetunde Adebayo", text: "Hi everyone!", time: "3:10pm", type: "text", senderType: "teacher", avatar: "/image/teachers/english.png", color: "blue" },
+  { sender: "me", text: "Got it!", time: "3:12pm", type: "text", senderType: "student", avatar: "/image/students/me.png", color: "green" },
   {
-    sender: "other",
+    sender: "Mrs Yetunde Adebayo",
     text: "/audio/sample-voice-note.mp3",
     time: "3:12pm",
     type: "voice",
+    senderType: "teacher",
+    avatar: "/image/teachers/english.png",
+    color: "blue",
   },
   {
     sender: "me",
     text: "/audio/sample-voice-note.mp3",
     time: "3:12pm",
     type: "voice",
+    senderType: "student",
+    avatar: "/image/students/me.png",
+    color: "green",
   },
 ];
 
-export default function PrivateChat() {
+interface PrivateChatProps {
+  replyingMessage: { sender: string; text: string } | null;
+  setReplyingMessage: (msg: any) => void;
+  openSubMenu: { index: number; type: string } | null;
+  toggleSubMenu: (index: number, type: string) => void;
+}
+
+export default function PrivateChat({
+  replyingMessage,
+  setReplyingMessage,
+  openSubMenu,
+  toggleSubMenu,
+}: PrivateChatProps) {
   return (
     <div className="w-2/3 flex flex-col">
       <div className="flex items-center rounded-tr-lg p-4 border-b bg-white">
@@ -37,9 +56,20 @@ export default function PrivateChat() {
           Today
         </div>
         {messages.map((msg, index) => (
-          <MessageBubble key={index} msg={msg} />
+          <MessageBubble
+            key={index}
+            msg={msg}
+            index={index}
+            openSubMenu={openSubMenu}
+            toggleSubMenu={toggleSubMenu}
+            setReplyingMessage={setReplyingMessage}
+          />
         ))}
       </div>
+      {replyingMessage && (
+        // Assuming you have a ReplyPreview component to show reply info
+        <ReplyPreview replyingMessage={replyingMessage} onCancel={() => setReplyingMessage(null)} />
+      )}
       <MessageInput />
     </div>
   );

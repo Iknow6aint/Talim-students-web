@@ -51,50 +51,52 @@ export default function MessageOptionsDropdown({
 
   return (
     <div className="relative" ref={containerRef}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="px-4 w-6 h-6 bg-white border border-[#F0F0F0] shadow-none rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200"
-          >
-            <ChevronDown className="text-[#878787]" size={16} />
-          </Button>
-        </DropdownMenuTrigger>
-        {!isDropdownOpen && (
-          <DropdownMenuContent
-            className="border-[#F0F0F0] font-manrope shadow-none"
-            align="end"
-          >
-            <DropdownMenuItem
-              onClick={() => setReplyingMessage(msg)}
-              className="text-[#131616]"
+      <div className="absolute z-50 -top-1 right-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="px-4 w-6 h-6 bg-white border border-[#F0F0F0] shadow-none rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200"
             >
-              Reply
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-[#131616]">
-              Reply privately
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => toggleSubMenu(index, "emojis")}
-              className="text-[#131616]"
+              <ChevronDown className="text-[#878787]" size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          {!isDropdownOpen && (
+            <DropdownMenuContent
+              className="border-[#F0F0F0] font-manrope shadow-none"
+              align="end"
             >
-              Emojis
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => toggleSubMenu(index, "sendTo")}
-              className="text-[#131616]"
-            >
-              Send to
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-[#131616]">
-              Download
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-[#131616]">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        )}
-      </DropdownMenu>
+              <DropdownMenuItem
+                onClick={() => setReplyingMessage(msg)}
+                className="text-[#131616]"
+              >
+                Reply
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-[#131616]">
+                Reply privately
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => toggleSubMenu(index, "emojis")}
+                className="text-[#131616]"
+              >
+                Emojis
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => toggleSubMenu(index, "sendTo")}
+                className="text-[#131616]"
+              >
+                Send to
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-[#131616]">
+                Download
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-[#131616]">
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          )}
+        </DropdownMenu>
+      </div>
       {/* Submenu for Emojis */}
       {openSubMenu &&
         openSubMenu.index === index &&

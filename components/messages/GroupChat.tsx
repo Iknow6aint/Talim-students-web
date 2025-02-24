@@ -45,27 +45,21 @@ const messages = [
   },
 ];
 
-const GroupChat = () => {
-  const [chatMessages] = useState(messages);
-  const [replyingMessage, setReplyingMessage] = useState<
-    (typeof messages)[0] | null
-  >(null);
-  const [openSubMenu, setOpenSubMenu] = useState<{
-    index: number;
-    type: string;
-  } | null>(null);
+interface GroupChatProps {
+  replyingMessage: { sender: string; text: string } | null;
+  setReplyingMessage: (msg: any) => void;
+  openSubMenu: { index: number; type: string } | null;
+  toggleSubMenu: (index: number, type: string) => void;
+}
 
-  const toggleSubMenu = (index: number, type: string) => {
-    if (
-      openSubMenu &&
-      openSubMenu.index === index &&
-      openSubMenu.type === type
-    ) {
-      setOpenSubMenu(null);
-    } else {
-      setOpenSubMenu({ index, type });
-    }
-  };
+const GroupChat = ({
+  replyingMessage,
+  setReplyingMessage,
+  openSubMenu,
+  toggleSubMenu,
+}: GroupChatProps) => {
+  const [chatMessages] = useState(messages);
+  
 
   return (
     <div className="w-2/3 flex flex-col relative">

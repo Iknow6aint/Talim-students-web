@@ -2,8 +2,33 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { CheckCheck } from "lucide-react";
 import AudioMessage from "./AudioMessage";
+import MessageOptionsDropdown from "./MessageDropdown";
 
-export default function MessageBubble({ msg }: { msg: any }) {
+interface MessageBubbleProps {
+  msg: {
+    senderType: string;
+    avatar: string;
+    sender: string;
+    color: string;
+    type: string;
+    text?: string;
+    videoThumbnail?: string;
+    duration?: string;
+    time: string;
+  };
+  index: number;
+  openSubMenu: { index: number; type: string } | null;
+  toggleSubMenu: (index: number, type: string) => void;
+  setReplyingMessage: (msg: any) => void;
+}
+
+export default function MessageBubble({
+  msg,
+  index,
+  openSubMenu,
+  toggleSubMenu,
+  setReplyingMessage,
+}: MessageBubbleProps) {
   return (
     <div
       className={`flex items-end ${
@@ -24,6 +49,13 @@ export default function MessageBubble({ msg }: { msg: any }) {
                 : "bg-white text-[#030E18]"
             }`}
           >
+            <MessageOptionsDropdown
+                          index={index}
+                          msg={msg}
+                          openSubMenu={openSubMenu}
+                          toggleSubMenu={toggleSubMenu}
+                          setReplyingMessage={setReplyingMessage}
+                        />
             {msg.type === "text" ? (
               msg.text
             ) : (

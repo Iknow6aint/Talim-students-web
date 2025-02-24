@@ -51,20 +51,24 @@ export default function GroupMessageBubble({
                 : "bg-white text-[#030E18]"
             }`}
           >
+           
+              <MessageOptionsDropdown
+                index={index}
+                msg={msg}
+                openSubMenu={openSubMenu}
+                toggleSubMenu={toggleSubMenu}
+                setReplyingMessage={setReplyingMessage}
+              />
+            
+
             {msg.sender !== "me" && (
               <div className="flex justify-between relative">
                 <p className={`text-sm font-semibold ${msg.color} `}>
                   {msg.sender}
                 </p>
-                <MessageOptionsDropdown
-                  index={index}
-                  msg={msg}
-                  openSubMenu={openSubMenu}
-                  toggleSubMenu={toggleSubMenu}
-                  setReplyingMessage={setReplyingMessage}
-                />
               </div>
             )}
+
             {msg.type === "text" && <p className="text-sm">{msg.text}</p>}
             {msg.type === "voice" && <AudioMessage sender={msg.sender} />}
             {msg.type === "video" && (
