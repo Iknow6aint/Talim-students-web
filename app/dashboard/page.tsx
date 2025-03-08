@@ -1,13 +1,14 @@
 "use client"
 
-
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MetricCard } from "@/components/metric-card"
 import { ScheduleTimeline } from "@/components/schedule-timeline"
 import Layout from '@/components/Layout'
 import Image from 'next/image';
 import { Header } from '@/components/header'
-import { GetServerSideProps } from "next";
 import nookies from "nookies";
+
 const schedule = [
   { subject: "Mathematics", startTime: "08:00", endTime: "10:00" },
   { subject: "Civic Education", startTime: "10:00", endTime: "11:00" },
@@ -23,10 +24,45 @@ const metrics = {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const cookies = nookies.get(null);
+        const accessToken = cookies.access_token;
+        console.log('Checking auth token:', accessToken ? 'Token exists' : 'No token');
+
+        if (!accessToken) {
+          console.log('No access token found, redirecting to login...');
+          window.location.href = '/';
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Auth check error:', error);
+        window.location.href = '/';
+        return false;
+      }
+    };
+
+    const isAuthenticated = checkAuth();
+    if (isAuthenticated) {
+      console.log('User is authenticated, showing dashboard');
+      setIsLoading(false);
+    }
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <Layout>
       <div className="relative w-full h-full bg-[#F8F8F8] px-4 overflow-hidden">
-        <div className="  h-full mx-auto flex flex-col space-y-5 2xl:space-y-8">
+        <div className="h-full mx-auto flex flex-col space-y-5 2xl:space-y-8">
           {/* Header */}
           <Header/>
           {/* Overview */}
@@ -58,5 +94,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </Layout>
-  )
+  );
 }

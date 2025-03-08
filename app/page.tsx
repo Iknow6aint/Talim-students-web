@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import nookies from "nookies"; 
+import { Toaster } from "react-hot-toast";
+import { useAuth } from "./hooks/useAuth";
 
 interface FormData {
   email: string;
@@ -16,50 +16,23 @@ interface FormData {
 }
 
 const LoginPage: React.FC = () => {
-  const router = useRouter();
+  const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     rememberMe: false,
   });
-  const [error, setError] = useState<string | null>(null); // Error state for login failure
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null); // Reset the error message before trying to submit
-
-    // Dummy credentials for login
-    const dummyCredentials = {
-      email: "user@example.com",
-      password: "password123",
-    };
-
-    try {
-      console.log("Form submitted. Checking credentials...");
-      if (
-        formData.email === dummyCredentials.email &&
-        formData.password === dummyCredentials.password
-      ) {
-        console.log("Login successful!");
-        // Set the auth token as a cookie
-        document.cookie = "authToken=dummyAuthToken; path=/; max-age=604800;"; // 7 days expiry
-
-
-        // Redirect after successful login
-        router.push("/dashboard"); // Change this to your dashboard route
-      } else {
-        console.log("Invalid credentials.");
-        setError("Invalid credentials. Please try again.");
-      }
-    } catch (error) {
-      console.error("An error occurred:", error);
-      setError("An error occurred. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
+    
+    await login({
+      email: formData.email,
+      password: formData.password,
+      deviceToken: "web-token", // You can implement proper device token generation
+      platform: "web",
+    });
   };
 
   const togglePasswordVisibility = () => {
@@ -68,6 +41,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
+      <Toaster position="top-right" />
       {/* Login Form */}
       <div className="relative flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 lg:py-24">
         <div className="lg:absolute lg:top-16">
@@ -186,9 +160,6 @@ const LoginPage: React.FC = () => {
                 Keep me signed in for easy access
               </Label>
             </div>
-
-            {/* Error Message */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
 
             {/* Submit Button */}
             <Button

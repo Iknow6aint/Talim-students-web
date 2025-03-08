@@ -2,25 +2,29 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const authToken = request.cookies.get("authToken");
+  // Get the pathname of the request (e.g. /, /dashboard)
+  const path = request.nextUrl.pathname;
 
-  if (!authToken) {
-    // Redirect to login if token is missing
-    return NextResponse.redirect(new URL("/", request.url));
+  // Get the token from the cookies
+  const token = request.cookies.get('access_token')?.value;
+
+  // Define public paths that don't require authentication
+  const isPublicPath = path === '/' || path === '/register';
+
+  if (!token && !isPublicPath) {
+    // Redirect to login if accessing a protected route without a token
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Allow the request if the token exists
+  if (token && isPublicPath) {
+    // Redirect to dashboard if accessing public route with a token
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
   return NextResponse.next();
 }
 
-// Apply middleware to protected routes
+// See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/dashboard/:path*",
-     "/timetable/:path*",  
-    "/subjects/:path*",    
-    "/resources/:path*",
-    "/attendance/:path*",
-    "/results/:path*",
-    "/messages/:path*"
- ], 
+  matcher: ['/', '/dashboard/:path*', '/messages/:path*']
 };
