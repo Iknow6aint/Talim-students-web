@@ -124,7 +124,7 @@ export default function Page() {
         {/* Scrollable Main Content */}
         <main className=" w-[100%] flex-grow overflow-y-auto mx-auto px-5 py-5 space-y-6 scrollbar-hide">
           {/* Fixed "All Subjects" Header */}
-          <div className="sticky top-[-20px] bg-[#FBFBFB]  z-10 py-2 pt-6 ">
+          <div className="sticky top-[-20px] bg-[#F8F8F8] z-10 py-2 pt-6 ">
             <h1 className="text-2xl font-semibold">All Subjects</h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
