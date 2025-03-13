@@ -43,15 +43,6 @@ const messages = [
     color: "blue",
   },
   {
-    sender: "Mrs Yetunde Adebayo",
-    text: "/audio/sample-voice-note.mp3",
-    time: "3:12pm",
-    type: "voice",
-    senderType: "teacher",
-    avatar: "/image/teachers/english.png",
-    color: "blue",
-  },
-  {
     sender: "me",
     text: "/audio/sample-voice-note.mp3",
     time: "3:12pm",
