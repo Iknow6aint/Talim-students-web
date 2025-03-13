@@ -16,6 +16,7 @@ interface ChatHeaderProps {
   name: string;
   status?: string;
   subtext?: string; // For group members
+  onBack: () => void;
 }
 
 export default function ChatHeader({
@@ -23,6 +24,7 @@ export default function ChatHeader({
   name,
   status,
   subtext,
+  onBack,
 }: ChatHeaderProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +35,9 @@ export default function ChatHeader({
       <div className="flex w-full justify-between items-center gap-3">
         {/* Avatar & Name / Search Bar */}
         <div className="flex items-center gap-3 flex-1">
+          <div className="block sm:hidden" onClick={onBack}>
+            <ChevronLeft />
+          </div>
           <Avatar className="w-10 h-10 rounded-full">
             <AvatarImage src={avatar} />
           </Avatar>
@@ -46,7 +51,9 @@ export default function ChatHeader({
               <p className="text-xs text-gray-500">{status}</p>
             )}
             {!isSearching && subtext && (
-              <p className="text-xs text-[#7B7B7B] truncate ">{subtext}</p>
+              <p className="text-xs text-[#7B7B7B] max-w-[150px] sm:max-w-full truncate ">
+                {subtext}
+              </p>
             )}
           </div>
           <GroupInfoModal

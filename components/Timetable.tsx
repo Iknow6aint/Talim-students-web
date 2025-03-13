@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Download } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -17,7 +17,7 @@ const Timetable = () => {
     const [hours, minutes] = manualTime.split(":").map(Number);
 
     // Calculate the position based on hours and minutes
-    const timePosition = ((hours - startHour) + minutes / 60) * hourHeight + 65;
+    const timePosition = (hours - startHour + minutes / 60) * hourHeight + 65;
 
     setCurrentTimePosition(timePosition);
   }, [manualTime, hourHeight]);
@@ -32,40 +32,63 @@ const Timetable = () => {
   ];
 
   return (
-    <div className="px-4">
-      <div className="mx-auto bg-[#F8F8F8] rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
+    <div className="sm:px-4 p-3 max-w-[95vw] overflow-hidden">
+      <div className="mx-auto bg-[#F8F8F8] rounded-lg ">
+        <div className="flex justify-between items-center mb-2">
           <h1 className="text-2xl font-semibold">Timetable</h1>
-          <Button className="w-full sm:w-auto bg-[#003366] hover:bg-blue-800 py-6">
+          <Button className=" bg-[#003366] hover:bg-blue-800 py-6 hidden sm:flex">
             Download <Download className="mr-2 h-7 w-6" />
           </Button>
         </div>
-        <p className="text-gray-500 mb-6">Stay on Track with Your Class Schedule!</p>
+        <p className="text-[#AAAAAA] mb-6">
+          Stay on Track with Your Class Schedule!
+        </p>
 
-        <div className="overflow-x-auto border border-gray-300 rounded-t-3xl max-h-[510px] 2xl:max-h-[800px] overflow-y-scroll">
-          <div className="grid sticky top-0 z-30" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
-            <div className="font-semibold text-center bg-[#FFFFFF] py-6">Time</div>
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => (
-              <div key={index} className="font-semibold text-center bg-[#FFFFFF] py-6 border-l border-gray-300">
-                {day}
-              </div>
-            ))}
+        <div className="overflow-x-auto border border-gray-300 rounded-t-3xl h-screen 2xl:max-h-[full] overflow-y-scroll scrollbar-hide">
+          <div
+            className="grid sticky top-0 z-30"
+            style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}
+          >
+            <div className="font-semibold text-center bg-[#FFFFFF] py-6 border-b">
+              Time
+            </div>
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
+              (day, index) => (
+                <div
+                  key={index}
+                  className="font-semibold min-w-[114px] text-center bg-[#FFFFFF] py-6 border-l border-gray-300 border-b"
+                >
+                  {day}
+                </div>
+              )
+            )}
           </div>
 
-          <div className="grid relative" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
+          <div
+            className="grid relative"
+            style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}
+          >
             <div className="left-0 bg-white">
-              {["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM"].map((time, index) => (
-                <div key={index} className="flex items-center justify-center border-b border-gray-300" style={{ height: `${hourHeight}px` }}>
-                  {time}
-                </div>
-              ))}
+              {["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM"].map(
+                (time, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-center border-b border-gray-300"
+                    style={{ height: `${hourHeight}px` }}
+                  >
+                    {time}
+                  </div>
+                )
+              )}
             </div>
 
             {subjects
               .filter((subject) => subject.name === "Break time")
               .map((breakTime, index) => {
-                const topPosition = (breakTime.start - startHour) * hourHeight + 65;
-                const subjectHeight = (breakTime.end - breakTime.start) * hourHeight - 16;
+                const topPosition =
+                  (breakTime.start - startHour) * hourHeight + 65;
+                const subjectHeight =
+                  (breakTime.end - breakTime.start) * hourHeight - 16;
 
                 return (
                   <div
@@ -87,68 +110,71 @@ const Timetable = () => {
                 );
               })}
 
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, dayIndex) => (
-              <div key={dayIndex} className="col-span-1 border-l border-gray-300 relative">
-                {subjects
-                  .filter((subject) => subject.day === day)
-                  .map((subject, subjectIndex) => {
-                    const topPosition = (subject.start - startHour) * hourHeight + 65;
-                    const subjectHeight = (subject.end - subject.start) * hourHeight - 16;
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
+              (day, dayIndex) => (
+                <div
+                  key={dayIndex}
+                  className="col-span-1 min-w-[114px] border-l border-gray-300 relative"
+                >
+                  {subjects
+                    .filter((subject) => subject.day === day)
+                    .map((subject, subjectIndex) => {
+                      const topPosition =
+                        (subject.start - startHour) * hourHeight + 65;
+                      const subjectHeight =
+                        (subject.end - subject.start) * hourHeight - 16;
 
-                    return (
-                      <div
-                        key={subjectIndex}
-                        className="absolute left-0 right-0 m-1 p-2 rounded shadow-orange-800  bg-[#ffffff] flex items-center justify-center text-center"
-                        style={{
-                          top: `${topPosition}px`,
-                          height: `${subjectHeight}px`,
-                        }}
-                      >
-                        <div>
-                          <div className="font-semibold">{subject.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {subject.start}:00 AM - {subject.end}:00 AM
+                      return (
+                        <div
+                          key={subjectIndex}
+                          className="absolute left-0 right-0 m-1 p-2 rounded shadow-orange-800  bg-[#ffffff] flex items-center justify-center text-center"
+                          style={{
+                            top: `${topPosition}px`,
+                            height: `${subjectHeight}px`,
+                          }}
+                        >
+                          <div>
+                            <div className="font-semibold">{subject.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {subject.start}:00 AM - {subject.end}:00 AM
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            ))}
- 
+                      );
+                    })}
+                </div>
+              )
+            )}
+
             {/* Dynamic Time Indicator Based on Custom Time */}
             <div
-  className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
-  style={{
-    top: `${currentTimePosition - 7}px `, // Position based on the calculated time
-    zIndex: 20,
- 
-  }}
->
-  {/* Time Pill */}
-  <div className="absolute top-[-6px] left-[-87px] px-3 py-1 flex items-center justify-center bg-[#002B5B] text-white font-medium rounded-full">
-    {manualTime}
-  </div>
+              className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
+              style={{
+                top: `${currentTimePosition - 7}px `, // Position based on the calculated time
+                zIndex: 20,
+              }}
+            >
+              {/* Time Pill */}
+              <div className="absolute top-[-6px] left-[-87px] px-3 py-1 flex items-center justify-center bg-[#002B5B] text-white font-medium rounded-full">
+                {manualTime}
+              </div>
 
-  {/* Blue Dot */}
-  <div className="absolute  left-[-8px] right-0 h-2 w-2 rounded-full bg-[#002B5B]" 
-  style={{
-    top: `5.4px`, // Position based on the calculated time
-    
-  }}/>
+              {/* Blue Dot */}
+              <div
+                className="absolute  left-[-8px] right-0 h-2 w-2 rounded-full bg-[#002B5B]"
+                style={{
+                  top: `5.4px`, // Position based on the calculated time
+                }}
+              />
 
-  {/* Horizontal Line */}
-  <div
-    className="absolute top-2 left-0 right-0 bg-[#002B5B]"
-    style={{
-      height: "3px", // Line thickness
-      
-      
-    }}
-  />
-</div>
-
-          
+              {/* Horizontal Line */}
+              <div
+                className="absolute top-2 left-0 right-0 bg-[#002B5B]"
+                style={{
+                  height: "3px", // Line thickness
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

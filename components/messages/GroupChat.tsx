@@ -50,6 +50,7 @@ interface GroupChatProps {
   setReplyingMessage: (msg: any) => void;
   openSubMenu: { index: number; type: string } | null;
   toggleSubMenu: (index: number, type: string) => void;
+  onBack: () => void;
 }
 
 const GroupChat = ({
@@ -57,17 +58,18 @@ const GroupChat = ({
   setReplyingMessage,
   openSubMenu,
   toggleSubMenu,
+  onBack,
 }: GroupChatProps) => {
   const [chatMessages] = useState(messages);
-  
 
   return (
-    <div className="w-2/3 flex flex-col relative">
+    <div className="w-full flex flex-col overflow-hidden relative">
       <div className="flex items-center rounded-tr-lg p-4 border-b bg-white">
         <ChatHeader
           avatar="/image/teachers/english.png"
           name="JSS 1"
           subtext="Aisha Suleiman, Daniel Okoro, Fatima Abubakar, Chinedu Eze, Maryam Yusuf, Ibrahim Danladi"
+          onBack={onBack}
         />
       </div>
 

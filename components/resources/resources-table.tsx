@@ -1,31 +1,38 @@
-import { Checkbox } from "@/components/ui/checkbox"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { FileText, Image, Video, AlignLeft, Download } from 'lucide-react'
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { FileText, Image, Video, AlignLeft, Download } from "lucide-react";
 
 interface Resource {
-  id: string
-  name: string
-  subject: string
-  uploadDate: string
-  teacherName: string
-  type: 'pdf' | 'img' | 'vid' | 'txt'
+  id: string;
+  name: string;
+  subject: string;
+  uploadDate: string;
+  teacherName: string;
+  type: "pdf" | "img" | "vid" | "txt";
 }
 
-const getFileIcon = (type: Resource['type']) => {
+const getFileIcon = (type: Resource["type"]) => {
   switch (type) {
-    case 'pdf':
-      return <FileText className="h-4 w-4" />
-    case 'img':
-      return <Image className="h-4 w-4" />
-    case 'vid':
-      return <Video className="h-4 w-4" />
-    case 'txt':
-      return <AlignLeft className="h-4 w-4" />
+    case "pdf":
+      return <FileText className="h-4 w-4" />;
+    case "img":
+      return <Image className="h-4 w-4" />;
+    case "vid":
+      return <Video className="h-4 w-4" />;
+    case "txt":
+      return <AlignLeft className="h-4 w-4" />;
   }
-}
+};
 
 interface ResourcesTableProps {
-  resources: Resource[]
+  resources: Resource[];
 }
 
 export function ResourcesTable({ resources }: ResourcesTableProps) {
@@ -33,7 +40,10 @@ export function ResourcesTable({ resources }: ResourcesTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>   <Checkbox /> Name</TableHead>
+          <TableHead>
+            {" "}
+            <Checkbox /> Name
+          </TableHead>
           <TableHead>Subject</TableHead>
           <TableHead>Upload Date</TableHead>
           <TableHead>Teacher's Name</TableHead>
@@ -43,7 +53,6 @@ export function ResourcesTable({ resources }: ResourcesTableProps) {
       <TableBody>
         {resources.map((resource) => (
           <TableRow key={resource.id}>
-            
             <TableCell>
               <div className="flex items-center gap-2">
                 {getFileIcon(resource.type)}
@@ -63,6 +72,5 @@ export function ResourcesTable({ resources }: ResourcesTableProps) {
         ))}
       </TableBody>
     </Table>
-  )
+  );
 }
-

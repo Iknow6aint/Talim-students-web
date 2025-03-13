@@ -110,7 +110,7 @@ interface ChatSidebarProps {
 
 export default function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
   return (
-    <div className="w-1/3 border-r p-4 bg-white rounded-tl-lg flex flex-col">
+    <div className="h-full border-none sm:border-r p-4 bg-white rounded-lg sm:rounded-tl-lg  flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg">Messages</h2>
       </div>

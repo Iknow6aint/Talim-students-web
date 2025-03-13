@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     await login({
       email: formData.email,
       password: formData.password,
@@ -56,16 +56,24 @@ const LoginPage: React.FC = () => {
         </div>
         <div className="w-full max-w-[400px] space-y-8">
           <div className="font-manrope space-y-4 text-center">
-            <h1 className="text-3xl font-medium text-[#030E18]">Welcome back</h1>
+            <h1 className="text-3xl font-medium text-[#030E18]">
+              Welcome back
+            </h1>
             <p className="text-lg text-[#444444] font-normal">
               Sign in to continue your learning journey.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6 pt-[45px] font-manrope">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 pt-[45px] font-manrope"
+          >
             {/* Email Input */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-lg font-medium text-[#030E18]">
+              <Label
+                htmlFor="email"
+                className="text-lg font-medium text-[#030E18]"
+              >
                 Email
               </Label>
               <Input
@@ -83,7 +91,10 @@ const LoginPage: React.FC = () => {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-lg font-medium text-[#030E18]">
+              <Label
+                htmlFor="password"
+                className="text-lg font-medium text-[#030E18]"
+              >
                 Password
               </Label>
               <div className="relative">
@@ -94,7 +105,10 @@ const LoginPage: React.FC = () => {
                   className="w-full px-3 h-[50px]"
                   value={formData.password}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, password: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
                   }
                   required
                 />
@@ -156,7 +170,10 @@ const LoginPage: React.FC = () => {
                   }))
                 }
               />
-              <Label htmlFor="remember" className="text-base font-normal text-[#030E18]">
+              <Label
+                htmlFor="remember"
+                className="text-base font-normal text-[#030E18]"
+              >
                 Keep me signed in for easy access
               </Label>
             </div>

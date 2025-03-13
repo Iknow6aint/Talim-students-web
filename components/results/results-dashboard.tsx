@@ -64,7 +64,7 @@ export default function ResultsDashboard() {
                 <DropdownMenuItem>All Results</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="bg-blue-900 hover:bg-blue-800">Download Results</Button>
+            <Button className=" bg-blue-900 hover:bg-blue-800">Download Results</Button>
           </div>
         </div>
 
