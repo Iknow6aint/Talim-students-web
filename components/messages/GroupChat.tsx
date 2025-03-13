@@ -63,7 +63,7 @@ const GroupChat = ({
   const [chatMessages] = useState(messages);
 
   return (
-    <div className="w-full flex flex-col overflow-hidden relative">
+    <div className="w-full h-full justify-between flex flex-col overflow-hidden relative">
       <div className="flex items-center rounded-tr-lg p-4 border-b bg-white">
         <ChatHeader
           avatar="/image/teachers/english.png"

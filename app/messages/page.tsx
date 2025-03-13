@@ -41,7 +41,7 @@ export default function ChatUI() {
 
   return (
     <Layout>
-      <div className="flex flex-1 sm:h-[100vh] sm:h-[calc(100vh-85px)] overflow-hidden gap-1 px-5 pt-8 relative">
+      <div className="flex flex-1 h-[100vh] sm:h-[calc(100vh-85px)] overflow-hidden gap-1 px-5 pt-8 relative">
         <div className="flex flex-1 gap-1 border border-[#F0F0F0] ">
           {/* Sidebar - Show only when showSidebar is true on mobile */}
           <div

@@ -78,7 +78,7 @@ export default function PrivateChat({
   onBack,
 }: PrivateChatProps) {
   return (
-    <div className="w-full flex flex-col justify-between">
+    <div className="w-full h-full flex flex-col justify-between">
       <div className="flex items-center rounded-tr-lg p-4 border-b bg-white">
         <ChatHeader
           avatar="/image/teachers/english.png"
