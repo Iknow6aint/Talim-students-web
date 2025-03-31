@@ -10,7 +10,7 @@ interface LayoutProps {
 function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   return (
-    <div className="flex flex-row sm:h-screen font-manrope">
+    <div className="flex flex-row h-screen font-manrope">
       {/* Sidebar: Hidden on mobile, toggled via state */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-40 ${
@@ -23,11 +23,14 @@ function Layout({ children }: LayoutProps) {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 md:relative`}
       >
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
       </div>
-      <div className="bg-[#F8F8F8] flex-1 border h-full">
+      <div className="bg-[#F8F8F8] flex flex-col flex-1 border h-full overflow-hidden">
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <div className="flex-1 overflow-hidden">{children}</div>
+        <div className="flex-1 h-full overflow-y-auto">{children}</div>
       </div>
     </div>
   );

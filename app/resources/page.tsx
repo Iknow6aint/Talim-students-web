@@ -1,4 +1,3 @@
-"use client"
 import { ResourcesTable } from "@/components/resources/resources-table";
 import { Pagination } from "@/components/Subject/pagination";
 import { Input } from "@/components/ui/input";
@@ -31,7 +30,6 @@ const resources = [
     teacherName: "Mrs. Joan Okechukwu",
     type: "vid" as const,
   },
-  // Add more items to match the screenshot
   {
     id: "4",
     name: "History Video.txt",
@@ -103,22 +101,25 @@ export default function Page() {
     <Layout>
       <div className="h-screen bg-[#F8F8F8] flex flex-col">
         <main className="container flex-grow overflow-y-auto mx-auto p-4 space-y-6 scrollbar-hide">
-          <div>
-            <h1 className="text-2xl font-semibold">Resources</h1>
-            <p className="text-muted-foreground">
-              Everything your teachers shared for you!
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Search" className="pl-8" />
+          <div className="flex sm:flex-row flex-col gap-1 sm:gap-0 justify-between items-left sm:items-center">
+            <div>
+              <h1 className="text-xl text-[#2F2F2F] font-medium">Resources</h1>
+              <p className="text-[#AAAAAA]">
+                Everything your teachers shared for you!
+              </p>
             </div>
-            <Button className="w-full sm:w-auto bg-blue-900 hover:bg-blue-800">
-              <Download className="mr-2 h-4 w-4" /> Download All
+            <div className="flex h-full sm:flex-row gap-4 items-center">
+            <div className="flex w-full h-10 sm:h-12 border border-[#F0F0F0] bg-white items-center p-2 rounded-lg text-[#898989]">
+              <Search strokeWidth="1.5" className="" />
+              <Input type="search" placeholder="Search" className="flex-1 border-none shadow-none focus:outline-none focus-visible:ring-0" />
+            </div>
+            <Button className="w-full h-10 sm:h-12 sm:w-auto bg-[#003366] hover:bg-blue-800">
+              <Download className="" /> Download All
             </Button>
           </div>
+          </div>
+
+         
 
           <div className="rounded-lg border bg-card">
             <div className="overflow-x-auto">

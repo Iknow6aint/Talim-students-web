@@ -120,14 +120,14 @@ export default function Page() {
   return (
     <Layout>
       {/* Ensure the layout fills the entire viewport */}
-      <div className="h-screen bg-[#F8F8F8] flex flex-col">
+      <div className="h-screen  flex flex-col">
         {/* Scrollable Main Content */}
         <main className=" w-[100%] flex-grow overflow-y-auto mx-auto px-5 py-5 space-y-6 scrollbar-hide">
           {/* Fixed "All Subjects" Header */}
           <div className="sticky top-[-20px] bg-[#F8F8F8] z-10 py-2 pt-6 ">
-            <h1 className="text-2xl font-semibold">All Subjects</h1>
+            <p className="text-xl text-[#2F2F2F] font-medium">All Subjects</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects.map((subject, index) => (
               <SubjectCard key={index} {...subject} />
             ))}

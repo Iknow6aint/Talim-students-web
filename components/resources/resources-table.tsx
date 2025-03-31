@@ -60,7 +60,7 @@ export function ResourcesTable({ resources }: ResourcesTableProps) {
               </div>
             </TableCell>
             <TableCell>{resource.subject}</TableCell>
-            <TableCell>{resource.uploadDate}</TableCell>
+            <TableCell className="text-[#616161]">{resource.uploadDate}</TableCell>
             <TableCell>{resource.teacherName}</TableCell>
             <TableCell className="bg-[#ADBECE] hover:bg-blue-200">
               <button className="flex items-center justify-center w-full py-4 text-sm text-white  transition-colors">

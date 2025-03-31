@@ -1,8 +1,10 @@
 import type { ReactNode } from "react"
 export interface MetricCardProps {
-    icon: ReactNode;
+    icon?: ReactNode;
     value: string | number
     label: string
+    message: React.ReactNode;
+    link?: string
   }
   
   export interface ScheduleItem {

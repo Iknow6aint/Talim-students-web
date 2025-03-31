@@ -2,8 +2,9 @@
 import { Download } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
-const Timetable = () => {
+const Timetable = ({ buttonText }: { buttonText: string }) => {
   const hourHeight = 130; // Height for each hour (in pixels)
   const startHour = 8; // Start of the timetable (8 AM)
 
@@ -34,17 +35,24 @@ const Timetable = () => {
   return (
     <div className="sm:px-4 p-3 max-w-[95vw] overflow-hidden">
       <div className="mx-auto bg-[#F8F8F8] rounded-lg ">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-semibold">Timetable</h1>
-          <Button className=" bg-[#003366] hover:bg-blue-800 py-6 hidden sm:flex">
-            Download <Download className="mr-2 h-7 w-6" />
+          <Button
+            className={`py-6 hidden sm:flex ${
+              buttonText === "See all"
+                ? "bg-transparent border-none hover:bg-transparent shadow-none text-[#6F6F6F]"
+                : "bg-[#003366] hover:bg-blue-800"
+            }`}
+          >
+            {buttonText}
+            {buttonText !== "See all" && <Download className="mr-2 h-7 w-6" />}
           </Button>
         </div>
         <p className="text-[#AAAAAA] mb-6">
           Stay on Track with Your Class Schedule!
         </p>
 
-        <div className="overflow-x-auto border border-gray-300 rounded-t-3xl h-screen 2xl:max-h-[full] overflow-y-scroll scrollbar-hide">
+        <div className="overflow-x-auto border border-[#F0F0F0] rounded-t-3xl h-screen 2xl:max-h-[full] overflow-y-scroll scrollbar-hide">
           <div
             className="grid sticky top-0 z-30"
             style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}
@@ -56,7 +64,7 @@ const Timetable = () => {
               (day, index) => (
                 <div
                   key={index}
-                  className="font-semibold min-w-[114px] text-center bg-[#FFFFFF] py-6 border-l border-gray-300 border-b"
+                  className="font-semibold min-w-[114px] text-center bg-[#FFFFFF] py-6 border-l border-[#F0F0F0] border-b"
                 >
                   {day}
                 </div>
@@ -73,7 +81,7 @@ const Timetable = () => {
                 (time, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-center border-b border-gray-300"
+                    className="flex items-center justify-center border-b border-[#F0F0F0]"
                     style={{ height: `${hourHeight}px` }}
                   >
                     {time}
@@ -93,7 +101,7 @@ const Timetable = () => {
                 return (
                   <div
                     key={index}
-                    className="absolute left-[103px] right-0 m-1 p-2 rounded shadow-md bg-yellow-100 flex items-center justify-center text-center"
+                    className="absolute left-[103px] right-0 m-1 p-2 rounded shadow-md bg-black flex items-center justify-center text-center"
                     style={{
                       top: `${topPosition}px`,
                       height: `${subjectHeight}px`,
@@ -114,7 +122,7 @@ const Timetable = () => {
               (day, dayIndex) => (
                 <div
                   key={dayIndex}
-                  className="col-span-1 min-w-[114px] border-l border-gray-300 relative"
+                  className="col-span-1 min-w-[114px] border-l border-[#F0F0F0] bg-white relative"
                 >
                   {subjects
                     .filter((subject) => subject.day === day)
@@ -122,12 +130,12 @@ const Timetable = () => {
                       const topPosition =
                         (subject.start - startHour) * hourHeight + 65;
                       const subjectHeight =
-                        (subject.end - subject.start) * hourHeight - 16;
+                        (subject.end - subject.start) * hourHeight;
 
                       return (
                         <div
                           key={subjectIndex}
-                          className="absolute left-0 right-0 m-1 p-2 rounded shadow-orange-800  bg-[#ffffff] flex items-center justify-center text-center"
+                          className="absolute left-0 right-0 p-2 shadow-orange-800 border-y border-[#F0F0F0] flex items-center justify-center text-center"
                           style={{
                             top: `${topPosition}px`,
                             height: `${subjectHeight}px`,

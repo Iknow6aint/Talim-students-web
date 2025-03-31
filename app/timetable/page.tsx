@@ -6,7 +6,7 @@ function page() {
   return (
     <Layout>
       <main>
-        <Timetable />
+        <Timetable buttonText="Download" />
       </main>
     </Layout>
   );

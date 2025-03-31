@@ -17,9 +17,13 @@ const schedule = [
 ];
 
 const metrics = {
-  subjects: 15,
-  gradeScore: 85,
-  attendancePercentage: 95,
+  subjects: { value: 15, message: "See more", link: "/subjects" },
+  gradeScore: { value: 85, message: "See more", link: "/results" },
+  attendancePercentage: {
+    value: "95%",
+    message: "See more",
+    link: "/attendance",
+  },
 };
 
 export default function DashboardPage() {
@@ -79,8 +83,10 @@ export default function DashboardPage() {
                     className="h-[52px] w-[52px]"
                   />
                 }
-                value={metrics.subjects}
+                value={metrics.subjects.value}
                 label="Subjects Enrolled"
+                message={metrics.subjects.message}
+                link={metrics.subjects.link}
               />
               <MetricCard
                 icon={
@@ -90,8 +96,10 @@ export default function DashboardPage() {
                     className="h-[52px] w-[52px]"
                   />
                 }
-                value={`${metrics.gradeScore}%`}
+                value={metrics.gradeScore.value}
                 label="Grade Score"
+                message={metrics.gradeScore.message}
+                link={metrics.gradeScore.link}
               />
               <MetricCard
                 icon={
@@ -101,15 +109,17 @@ export default function DashboardPage() {
                     className="h-[52px] w-[52px]"
                   />
                 }
-                value={`${metrics.attendancePercentage}%`}
+                value={metrics.attendancePercentage.value}
                 label="Attendance Percentage"
+                message={metrics.attendancePercentage.message}
+                link={metrics.attendancePercentage.link}
               />
             </div>
           </div>
 
           {/* Schedule */}
           <div>
-            <Timetable />
+            <Timetable buttonText="See all" />
           </div>
         </div>
       </div>
