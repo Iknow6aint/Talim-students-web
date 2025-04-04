@@ -6,16 +6,50 @@ import ChatHeader from "./ChatHeader";
 import ReplyPreview from "./ReplyPreview";
 
 const messages = [
-  { sender: "Mrs Yetunde Adebayo", text: "Hi everyone!", time: "3:10pm", type: "text", senderType: "teacher", avatar: "/image/teachers/english.png", color: "blue" },
-  { sender: "me", text: "Got it!", time: "3:12pm", type: "text", senderType: "student", avatar: "/image/students/me.png", color: "green" },
   {
     sender: "Mrs Yetunde Adebayo",
-    text: "/audio/sample-voice-note.mp3",
-    time: "3:12pm",
-    type: "voice",
+    text: "Hi everyone!",
+    time: "3:10pm",
+    type: "text",
     senderType: "teacher",
     avatar: "/image/teachers/english.png",
     color: "blue",
+  },
+  {
+    sender: "me",
+    text: "Got it!",
+    time: "3:12pm",
+    type: "text",
+    senderType: "student",
+    avatar: "/image/students/me.png",
+    color: "green",
+  },
+  {
+    sender: "me",
+    text: "/audio/sample-voice-note.mp3",
+    time: "3:12pm",
+    type: "voice",
+    senderType: "student",
+    avatar: "/image/students/me.png",
+    color: "green",
+  },
+  {
+    sender: "Mrs Yetunde Adebayo",
+    text: "Hi everyone!",
+    time: "3:10pm",
+    type: "text",
+    senderType: "teacher",
+    avatar: "/image/teachers/english.png",
+    color: "blue",
+  },
+  {
+    sender: "me",
+    text: "/audio/sample-voice-note.mp3",
+    time: "3:12pm",
+    type: "voice",
+    senderType: "student",
+    avatar: "/image/students/me.png",
+    color: "green",
   },
   {
     sender: "me",
@@ -33,6 +67,7 @@ interface PrivateChatProps {
   setReplyingMessage: (msg: any) => void;
   openSubMenu: { index: number; type: string } | null;
   toggleSubMenu: (index: number, type: string) => void;
+  onBack: () => void;
 }
 
 export default function PrivateChat({
@@ -40,14 +75,16 @@ export default function PrivateChat({
   setReplyingMessage,
   openSubMenu,
   toggleSubMenu,
+  onBack,
 }: PrivateChatProps) {
   return (
-    <div className="w-2/3 flex flex-col">
+    <div className="w-full h-full flex flex-col justify-between">
       <div className="flex items-center rounded-tr-lg p-4 border-b bg-white">
         <ChatHeader
           avatar="/image/teachers/english.png"
           name="Mrs. Yetunde Adebayo"
           status="typing..."
+          onBack={onBack}
         />
         {/* Additional action icons can be added here if needed */}
       </div>
@@ -68,7 +105,10 @@ export default function PrivateChat({
       </div>
       {replyingMessage && (
         // Assuming you have a ReplyPreview component to show reply info
-        <ReplyPreview replyingMessage={replyingMessage} onCancel={() => setReplyingMessage(null)} />
+        <ReplyPreview
+          replyingMessage={replyingMessage}
+          onCancel={() => setReplyingMessage(null)}
+        />
       )}
       <MessageInput />
     </div>
