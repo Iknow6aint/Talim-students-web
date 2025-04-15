@@ -1,19 +1,54 @@
 import React from "react";
-
-const parentDetails = [
-  { label: "First Name:", value: "Emeka" },
-  { label: "Last Name:", value: "Adewale" },
-  { label: "Phone Number:", value: "+234XXXXX" },
-  { label: "Email Address:", value: "emekadewale@gmail.com" },
-  { label: "Relationship to student:", value: "Parent" },
-];
+import { useAcademicDetails } from "@/hooks/useAcademicDetails";
+// import { Skeleton } from "@/components/ui/skeleton";
 
 const ParentDetails = () => {
+  const { academicData, loading, error } = useAcademicDetails();
+
+  if (loading) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Parent/Guardian Information</p>
+        <div className="p-4 space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex justify-between border-t pt-3">
+              <p>loading...</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Parent/Guardian Information</p>
+        <div className="p-4 text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  if (!academicData?.parentContact) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Parent/Guardian Information</p>
+        <div className="p-4 text-gray-500">No parent/guardian information available</div>
+      </div>
+    );
+  }
+
+  const parentDetails = [
+    { label: "First Name:", value: academicData.parentContact.fullName.split(' ')[0] },
+    { label: "Last Name:", value: academicData.parentContact.fullName.split(' ').slice(1).join(' ') },
+    { label: "Phone Number:", value: academicData.parentContact.phoneNumber || 'N/A' },
+    { label: "Email Address:", value: academicData.parentContact.email || 'N/A' },
+    { label: "Relationship:", value: academicData.parentContact.relationship || 'N/A' },
+  ];
+
   return (
     <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
-      <p className="p-3 bg-[#F9F9F9] text-[#454545]">
-        Parent/Guardian Information
-      </p>
+      <p className="p-3 bg-[#F9F9F9] text-[#454545]">Parent/Guardian Information</p>
       <table className="w-full table-fixed sm:table-auto text-sm">
         <tbody className="w-full">
           {parentDetails.map((item, index) => (
@@ -21,7 +56,7 @@ const ParentDetails = () => {
               <td className="py-2 px-3 text-[#909090] w-2/3 sm:w-auto whitespace-nowrap">
                 {item.label}
               </td>
-              <td className="py-2  w-1/3 sm:px-28 sm:w-auto font-medium break-words whitespace-normal ">
+              <td className="py-2 w-1/3 sm:px-28 sm:w-auto font-medium break-words whitespace-normal">
                 {item.value}
               </td>
             </tr>

@@ -1,3 +1,4 @@
+// pages/dashboard.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import Layout from "@/components/Layout";
 import Image from "next/image";
 import nookies from "nookies";
 import Timetable from "@/components/Timetable";
+import { useAttendance } from "@/hooks/useAttendance";
 
 const schedule = [
   { subject: "Mathematics", startTime: "08:00", endTime: "10:00" },
@@ -16,19 +18,10 @@ const schedule = [
   { subject: "English language", startTime: "01:00", endTime: "02:00" },
 ];
 
-const metrics = {
-  subjects: { value: 15, message: "See more", link: "/subjects" },
-  gradeScore: { value: 85, message: "See more", link: "/results" },
-  attendancePercentage: {
-    value: "95%",
-    message: "See more",
-    link: "/attendance",
-  },
-};
-
 export default function DashboardPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { attendanceData, isLoading: isAttendanceLoading } = useAttendance();
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -51,15 +44,27 @@ export default function DashboardPage() {
         console.error("Auth check error:", error);
         window.location.href = "/";
         return false;
+      } finally {
+        setIsAuthLoading(false);
       }
     };
 
-    const isAuthenticated = checkAuth();
-    if (isAuthenticated) {
-      console.log("User is authenticated, showing dashboard");
-      setIsLoading(false);
-    }
+    checkAuth();
   }, []);
+
+  // Combine loading states
+  const isLoading = isAuthLoading || isAttendanceLoading;
+
+  // Metrics with dynamic attendance percentage
+  const metrics = {
+    subjects: { value: 15, message: "See more", link: "/subjects" },
+    gradeScore: { value: 85, message: "See more", link: "/results" },
+    attendancePercentage: {
+      value: attendanceData ? attendanceData.attendancePercentage : "N/A",
+      message: "See more",
+      link: "/attendance",
+    },
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -70,7 +75,7 @@ export default function DashboardPage() {
       <div className="relative w-full sm:h-screen bg-[#F8F8F8] px-4 overflow-hidden">
         <div className="h-full mx-auto flex flex-col space-y-5 2xl:space-y-8">
           {/* Overview */}
-          <div className="flex-grow ">
+          <div className="flex-grow">
             <h2 className="text-xl font-semibold my-4">Overview</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <MetricCard
@@ -105,7 +110,7 @@ export default function DashboardPage() {
                 icon={
                   <img
                     src="/icons/dashboard/calendar.svg"
-                    alt="Award Icon"
+                    alt="Calendar Icon"
                     className="h-[52px] w-[52px]"
                   />
                 }

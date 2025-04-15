@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "react-hot-toast";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FormData {
   email: string;
@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
     await login({
       email: formData.email,
       password: formData.password,
-      deviceToken: "web-token", // You can implement proper device token generation
+      deviceToken: "web-token",
       platform: "web",
     });
   };
@@ -42,7 +42,6 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       <Toaster position="top-right" />
-      {/* Login Form */}
       <div className="relative flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 lg:py-24">
         <div className="lg:absolute lg:top-16">
           <Image
@@ -68,7 +67,6 @@ const LoginPage: React.FC = () => {
             onSubmit={handleSubmit}
             className="space-y-6 pt-[45px] font-manrope"
           >
-            {/* Email Input */}
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -88,8 +86,6 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
-
-            {/* Password Input */}
             <div className="space-y-2">
               <Label
                 htmlFor="password"
@@ -157,8 +153,6 @@ const LoginPage: React.FC = () => {
                 </button>
               </div>
             </div>
-
-            {/* Remember Me Checkbox */}
             <div className="flex items-center space-x-2 pb-12">
               <Checkbox
                 id="remember"
@@ -177,8 +171,6 @@ const LoginPage: React.FC = () => {
                 Keep me signed in for easy access
               </Label>
             </div>
-
-            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full bg-[#003366] hover:bg-[#002B5B]/90 text-white h-[50px] rounded-lg text-lg font-medium"
@@ -189,8 +181,6 @@ const LoginPage: React.FC = () => {
           </form>
         </div>
       </div>
-
-      {/* Illustration */}
       <div className="flex-1 relative hidden lg:block">
         <Image
           src="/icons/login/school-illustration.svg"

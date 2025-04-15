@@ -1,11 +1,53 @@
-import React from "react";
+// components/AcademicInformation.tsx
+'use client';
 
-const academicInformation = [
-  { label: "Class:", value: "Grade B" },
-  { label: "Subjects:", value: "12" },
-];
+import React from 'react';
+import { useAcademicDetails } from '@/hooks/useAcademicDetails';
+// import { Skeleton } from '@/components/ui/skeleton';
+
 
 const AcademicInformation = () => {
+  const { academicData, loading, error } = useAcademicDetails();
+
+  if (loading) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Academic Information</p>
+        <div className="p-4 space-y-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex justify-between border-t pt-3">
+              <p>loading</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Academic Information</p>
+        <div className="p-4 text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  if (!academicData) {
+    return (
+      <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
+        <p className="p-3 bg-[#F9F9F9] text-[#454545]">Academic Information</p>
+        <div className="p-4 text-gray-500">No academic data available</div>
+      </div>
+    );
+  }
+
+  const academicInformation = [
+    { label: "Class:", value: academicData.classDetails.name },
+    { label: "Grade Level:", value: academicData.gradeLevel },
+    { label: "Subjects:", value: "12" } // Update this if you have actual subjects data
+  ];
+
   return (
     <div className="w-full mx-auto bg-white shadow-sm rounded-lg border">
       <p className="p-3 bg-[#F9F9F9] text-[#454545]">Academic Information</p>

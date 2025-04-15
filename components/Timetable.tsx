@@ -1,40 +1,71 @@
+// components/Timetable.tsx
 "use client";
+
 import { Download } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useTimetable, TimetableSubject } from "@/hooks/useTimetable";
 
 const Timetable = ({ buttonText }: { buttonText: string }) => {
   const hourHeight = 130; // Height for each hour (in pixels)
-  const startHour = 8; // Start of the timetable (8 AM)
-
-  // Set your custom time here (use a 24-hour format)
-  const [manualTime, setManualTime] = useState("10:32");
-
+  const { subjects, isLoading } = useTimetable();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showIndicator, setShowIndicator] = useState(false);
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
+  const [schoolHours, setSchoolHours] = useState({ start: 8, end: 17 }); // Default values
 
+  // Determine school hours based on timetable data
   useEffect(() => {
-    // Parse the manually set time
-    const [hours, minutes] = manualTime.split(":").map(Number);
+    if (subjects.length > 0) {
+      const allStartTimes = subjects.map(subject => subject.start);
+      const allEndTimes = subjects.map(subject => subject.end);
+      
+      const earliestStart = Math.floor(Math.min(...allStartTimes));
+      const latestEnd = Math.ceil(Math.max(...allEndTimes));
+      
+      // Set school hours with 1 hour buffer before first class and after last class
+      setSchoolHours({
+        start: Math.max(earliestStart - 1, 7), // Don't go earlier than 7 AM
+        end: Math.min(latestEnd + 1, 20) // Don't go later than 8 PM
+      });
+    }
+  }, [subjects]);
 
-    // Calculate the position based on hours and minutes
-    const timePosition = (hours - startHour + minutes / 60) * hourHeight + 65;
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now);
+    }, 60000); // Update every minute
 
-    setCurrentTimePosition(timePosition);
-  }, [manualTime, hourHeight]);
+    return () => clearInterval(timer);
+  }, []);
 
-  const subjects = [
-    { name: "Mathematics", day: "Monday", start: 8, end: 10 },
-    { name: "Mathematics", day: "Tuesday", start: 8, end: 9 },
-    { name: "English Studies", day: "Tuesday", start: 9, end: 10 },
-    { name: "Social Studies", day: "Tuesday", start: 10, end: 11 },
-    { name: "Civic Education", day: "Thursday", start: 9, end: 10 },
-    { name: "Break time", day: "All", start: 12, end: 13 },
-  ];
+  // Calculate current time position and visibility
+  useEffect(() => {
+    const currentDecimalTime = currentTime.getHours() + currentTime.getMinutes() / 60;
+    const { start, end } = schoolHours;
+    
+    if (currentDecimalTime >= start && currentDecimalTime <= end) {
+      const timePosition = (currentDecimalTime - start) * hourHeight + 65;
+      setCurrentTimePosition(timePosition);
+      setShowIndicator(true);
+    } else {
+      setShowIndicator(false);
+    }
+  }, [currentTime, hourHeight, schoolHours]);
+
+  if (isLoading) {
+    return <div>Loading timetable...</div>;
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="sm:px-4 p-3 max-w-[95vw] overflow-hidden">
-      <div className="mx-auto bg-[#F8F8F8] rounded-lg ">
+      <div className="mx-auto bg-[#F8F8F8] rounded-lg">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-semibold">Timetable</h1>
           <Button
@@ -52,137 +83,87 @@ const Timetable = ({ buttonText }: { buttonText: string }) => {
           Stay on Track with Your Class Schedule!
         </p>
 
-        <div className="overflow-x-auto border border-[#F0F0F0] rounded-t-3xl h-screen 2xl:max-h-[full] overflow-y-scroll scrollbar-hide">
-          <div
-            className="grid sticky top-0 z-30"
-            style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}
-          >
-            <div className="font-semibold text-center bg-[#FFFFFF] py-6 border-b">
-              Time
-            </div>
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
-              (day, index) => (
-                <div
-                  key={index}
-                  className="font-semibold min-w-[114px] text-center bg-[#FFFFFF] py-6 border-l border-[#F0F0F0] border-b"
-                >
-                  {day}
-                </div>
-              )
-            )}
+        <div className="overflow-x-auto border border-[#F0F0F0] rounded-t-3xl h-screen overflow-y-scroll">
+          <div className="grid sticky top-0 z-30" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
+            <div className="font-semibold text-center bg-[#FFFFFF] py-6 border-b">Time</div>
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) => (
+              <div
+                key={index}
+                className="font-semibold min-w-[114px] text-center bg-[#FFFFFF] py-6 border-l border-[#F0F0F0] border-b"
+              >
+                {day}
+              </div>
+            ))}
           </div>
 
-          <div
-            className="grid relative"
-            style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}
-          >
+          <div className="grid relative" style={{ gridTemplateColumns: "103px repeat(5, 1fr)" }}>
             <div className="left-0 bg-white">
-              {["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM"].map(
-                (time, index) => (
+              {Array.from({ length: schoolHours.end - schoolHours.start + 1 }, (_, i) => {
+                const hour = schoolHours.start + i;
+                const timeStr = hour > 12 ? `${hour - 12} PM` : hour === 12 ? "12 PM" : `${hour} AM`;
+                return (
                   <div
-                    key={index}
+                    key={i}
                     className="flex items-center justify-center border-b border-[#F0F0F0]"
                     style={{ height: `${hourHeight}px` }}
                   >
-                    {time}
-                  </div>
-                )
-              )}
-            </div>
-
-            {subjects
-              .filter((subject) => subject.name === "Break time")
-              .map((breakTime, index) => {
-                const topPosition =
-                  (breakTime.start - startHour) * hourHeight + 65;
-                const subjectHeight =
-                  (breakTime.end - breakTime.start) * hourHeight - 16;
-
-                return (
-                  <div
-                    key={index}
-                    className="absolute left-[103px] right-0 m-1 p-2 rounded shadow-md bg-black flex items-center justify-center text-center"
-                    style={{
-                      top: `${topPosition}px`,
-                      height: `${subjectHeight}px`,
-                      gridColumn: "span 5",
-                    }}
-                  >
-                    <div>
-                      <div className="font-semibold">{breakTime.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {breakTime.start}:00 PM - {breakTime.end}:00 PM
-                      </div>
-                    </div>
+                    {timeStr}
                   </div>
                 );
               })}
-
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
-              (day, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className="col-span-1 min-w-[114px] border-l border-[#F0F0F0] bg-white relative"
-                >
-                  {subjects
-                    .filter((subject) => subject.day === day)
-                    .map((subject, subjectIndex) => {
-                      const topPosition =
-                        (subject.start - startHour) * hourHeight + 65;
-                      const subjectHeight =
-                        (subject.end - subject.start) * hourHeight;
-
-                      return (
-                        <div
-                          key={subjectIndex}
-                          className="absolute left-0 right-0 p-2 shadow-orange-800 border-y border-[#F0F0F0] flex items-center justify-center text-center"
-                          style={{
-                            top: `${topPosition}px`,
-                            height: `${subjectHeight}px`,
-                          }}
-                        >
-                          <div>
-                            <div className="font-semibold">{subject.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {subject.start}:00 AM - {subject.end}:00 AM
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )
-            )}
-
-            {/* Dynamic Time Indicator Based on Custom Time */}
-            <div
-              className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
-              style={{
-                top: `${currentTimePosition - 7}px `, // Position based on the calculated time
-                zIndex: 20,
-              }}
-            >
-              {/* Time Pill */}
-              <div className="absolute top-[-6px] left-[-87px] px-3 py-1 flex items-center justify-center bg-[#002B5B] text-white font-medium rounded-full">
-                {manualTime}
-              </div>
-
-              {/* Blue Dot */}
-              <div
-                className="absolute  left-[-8px] right-0 h-2 w-2 rounded-full bg-[#002B5B]"
-                style={{
-                  top: `5.4px`, // Position based on the calculated time
-                }}
-              />
-
-              {/* Horizontal Line */}
-              <div
-                className="absolute top-2 left-0 right-0 bg-[#002B5B]"
-                style={{
-                  height: "3px", // Line thickness
-                }}
-              />
             </div>
+
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, dayIndex) => (
+              <div
+                key={dayIndex}
+                className="col-span-1 min-w-[114px] border-l border-[#F0F0F0] bg-white relative"
+              >
+                {subjects
+                  .filter((subject) => subject.day === day)
+                  .map((subject, subjectIndex) => {
+                    const topPosition = (subject.start - schoolHours.start) * hourHeight + 65;
+                    const subjectHeight = (subject.end - subject.start) * hourHeight;
+
+                    return (
+                      <div
+                        key={subjectIndex}
+                        className="absolute left-0 right-0 p-2 border-y border-[#F0F0F0] flex flex-col justify-center "
+                        style={{
+                          top: `${topPosition}px`,
+                          height: `${subjectHeight}px`,
+                        }}
+                      >
+                        <div className="font-semibold text-center">{subject.name}</div>
+                        <div className="text-sm text-gray-500 text-center">
+                          {subject.timeString}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ))}
+
+            {showIndicator && (
+              <div
+                className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
+                style={{
+                  top: `${currentTimePosition - 7}px`,
+                  zIndex: 20,
+                }}
+              >
+                <div className="absolute top-[-6px] left-[-105px] px-3 py-1 flex items-center justify-center bg-[#002B5B] text-white font-medium rounded-full">
+                  {formatTime(currentTime)}
+                </div>
+                <div
+                  className="absolute  left-[-8px] right-0 h-2 w-2 rounded-full bg-[#002B5B]"
+                  style={{ top: `5.4px` }}
+                />
+                <div
+                  className="absolute top-2 left-0 right-0 bg-[#002B5B]"
+                  style={{ height: "3px" }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -191,3 +172,33 @@ const Timetable = ({ buttonText }: { buttonText: string }) => {
 };
 
 export default Timetable;
+
+
+{/* <div
+className="absolute left-[110px] w-[88%] 2xl:w-[93%]"
+style={{
+  top: `${currentTimePosition - 7}px `, // Position based on the calculated time
+  zIndex: 20,
+}}
+>
+{/* Time Pill */}
+// {/* <div className="absolute top-[-6px] left-[-87px] px-3 py-1 flex items-center justify-center bg-[#002B5B] text-white font-medium rounded-full">
+//   {/* {manualTime} */}
+// </div>
+
+// {/* Blue Dot */}
+// <div
+//   className="absolute  left-[-8px] right-0 h-2 w-2 rounded-full bg-[#002B5B]"
+//   style={{
+//     top: `5.4px`, // Position based on the calculated time
+//   }}
+// /> */}
+
+{/* Horizontal Line */}
+{/* <div
+  className="absolute top-2 left-0 right-0 bg-[#002B5B]"
+  style={{
+    height: "3px", // Line thickness
+  }}
+/>
+// </div> */}
