@@ -6,6 +6,8 @@ export interface LoginCredentials {
   platform: string;
 }
 
+
+
 export interface User {
   id: string;
   firstName: string;
