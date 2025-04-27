@@ -1,8 +1,8 @@
 import { API_ENDPOINTS } from '../../lib/constants';
-import { AuthResponse, LoginCredentials } from '../../types/auth';
+import {  LoginCredentials } from '../../types/auth';
 
 class AuthService {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  async login(credentials: LoginCredentials): Promise<any> {
     try {
       const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
