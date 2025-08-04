@@ -1,14 +1,13 @@
 // pages/dashboard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { MetricCard } from "@/components/metric-card";
 import Layout from "@/components/Layout";
 import Image from "next/image";
-import nookies from "nookies";
 import Timetable from "@/components/Timetable";
 import { useAttendance } from "@/hooks/useAttendance";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const schedule = [
   { subject: "Mathematics", startTime: "08:00", endTime: "10:00" },
@@ -19,41 +18,8 @@ const schedule = [
 ];
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { attendanceData, isLoading: isAttendanceLoading } = useAttendance();
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const cookies = nookies.get(null);
-        const accessToken = cookies.access_token;
-        console.log(
-          "Checking auth token:",
-          accessToken ? "Token exists" : "No token"
-        );
-
-        if (!accessToken) {
-          console.log("No access token found, redirecting to login...");
-          window.location.href = "/";
-          return false;
-        }
-
-        return true;
-      } catch (error) {
-        console.error("Auth check error:", error);
-        window.location.href = "/";
-        return false;
-      } finally {
-        setIsAuthLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // Combine loading states
-  const isLoading = isAuthLoading || isAttendanceLoading;
+  const { user } = useAuthContext();
+  const { attendanceData, isLoading } = useAttendance();
 
   // Metrics with dynamic attendance percentage
   const metrics = {
@@ -124,7 +90,7 @@ export default function DashboardPage() {
 
           {/* Schedule */}
           <div>
-            <Timetable buttonText="See all" />
+            <Timetable />
           </div>
         </div>
       </div>

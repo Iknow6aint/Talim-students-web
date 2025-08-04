@@ -11,7 +11,7 @@ import { LoginCredentials } from "@/types/auth";
 
 export const useAuth = () => {
   const router = useRouter();
-  const { setAuthState } = useAuthContext();
+  const { setAuthState, logout: contextLogout } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const login = async (credentials: LoginCredentials) => {
@@ -43,8 +43,16 @@ export const useAuth = () => {
         sameSite: "strict",
       });
 
+      // Also store in localStorage for consistency
+      localStorage.setItem("accessToken", loginResponse.access_token);
+      localStorage.setItem("refreshToken", loginResponse.refresh_token || "");
       localStorage.setItem("user", JSON.stringify(userData));
       setAuthState(userData, loginResponse.access_token);
+
+      // Trigger custom auth event for WebSocket context
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth-changed', { detail: { type: 'login', user: userData } }));
+      }
 
       toast.success("Login successful!");
       router.push("/dashboard");
@@ -59,8 +67,13 @@ export const useAuth = () => {
     }
   };
 
+  const logout = () => {
+    contextLogout();
+  };
+
   return {
     login,
+    logout,
     isLoading,
   };
 };

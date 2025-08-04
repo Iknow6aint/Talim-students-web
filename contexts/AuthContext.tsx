@@ -55,9 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const cookies = parseCookies();
-      const token = cookies.access_token;
+      // Check localStorage first (primary storage for students app)
       const userStr = localStorage.getItem("user");
+      let token = localStorage.getItem("accessToken");
+      
+      // Fallback to cookies if no token in localStorage
+      if (!token) {
+        const cookies = parseCookies();
+        token = cookies.access_token;
+      }
 
       if (token && userStr) {
         try {
@@ -67,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Failed to parse user data:", error);
           localStorage.removeItem("user");
+          localStorage.removeItem("accessToken");
         }
       }
       
@@ -82,11 +89,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // Clear cookies
     destroyCookie(null, "access_token");
     destroyCookie(null, "refresh_token");
+    
+    // Clear localStorage
     localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("studentDetails");
+    
     setAuthState(null, null);
+    
+    // Trigger custom auth event for WebSocket context
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { type: 'logout' } }));
+    }
+    
     router.push("/");
   };
 
