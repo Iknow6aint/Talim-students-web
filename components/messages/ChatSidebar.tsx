@@ -1,178 +1,284 @@
+"use client";
+
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
-import { Search, ChevronDown, CheckCheck } from "lucide-react";
+import { Search, ChevronDown, CheckCheck, Wifi, WifiOff, Loader2, Filter, MessageCircle, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useChat, RealtimeChatRoom } from "@/hooks/useChat";
 
-const conversations = [
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "typing...",
-    time: "4:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: true,
-  },
-  {
-    name: "JSS 1",
-    lastMessage: "Good evening everyone.",
-    type: "group",
-    time: "6:00pm",
-    avatar: "/image/teachers/mathematics.png",
-    unread: false,
-    lastSender: "me",
-  },
-  {
-    name: "Mrs Chisom Okechukwu",
-    lastMessage: "Brilliant",
-    time: "6:00pm",
-    avatar: "/image/teachers/civic.png",
-    unread: false,
-    lastSender: "me",
-    online: "false",
-  },
-  {
-    name: "Fatima Abubakar",
-    lastMessage: "typing...",
-    time: "6:00pm",
-    avatar: "/image/teachers/mathematics.png",
-    unread: false,
-    lastSender: "other",
-    online: true,
-  },
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "I'm happy you understand",
-    time: "4:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: "false",
-  },
-  {
-    name: "Mrs Chisom Okechukwu",
-    lastMessage: "I'm waiting for the question",
-    time: "6:00pm",
-    avatar: "/image/teachers/civic.png",
-    unread: false,
-    lastSender: "me",
-    online: "false",
-  },
-  {
-    name: "Maryan yusuf",
-    lastMessage: "typing...",
-    time: "5:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: "true",
-  },
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "typing...",
-    time: "5:00pm",
-    avatar: "/image/teachers/civic.png",
-    unread: true,
-    online: "true",
-  },
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "typing...",
-    time: "5:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: "true",
-  },
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "typing...",
-    time: "5:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: "true",
-  },
-  {
-    name: "Mrs. Yetunde Adebayo",
-    lastMessage: "typing...",
-    time: "5:00pm",
-    avatar: "/image/teachers/english.png",
-    unread: true,
-    online: "true",
-  },
-];
-
-interface ChatSidebarProps {
-  onSelectChat: (chat: { type: "private" | "group" }) => void;
+// Utility function to generate consistent colors from strings (matching Teachers app)
+function generateColorFromString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Use Material Design color palette
+  const colors = [
+    '#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5',
+    '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50',
+    '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800',
+    '#FF5722', '#795548', '#607D8B'
+  ];
+  
+  return colors[Math.abs(hash) % colors.length];
 }
 
-export default function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
+interface ChatSidebarProps {
+  onSelectChat: (chat: { type: "private" | "group"; room?: RealtimeChatRoom }) => void;
+  className?: string;
+}
+
+export default function ChatSidebar({ onSelectChat, className = "" }: ChatSidebarProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "classes" | "groups">("all");
+  
+  const { 
+    chatRooms, 
+    isLoading, 
+    isConnected, 
+    error, 
+    refreshChatRooms, 
+    searchChatRooms, 
+    getFilteredChatRooms,
+    selectRoom,
+    selectedRoomId
+  } = useChat();
+
+  // Get filtered and searched rooms
+  const getDisplayRooms = (): RealtimeChatRoom[] => {
+    let rooms = getFilteredChatRooms(filterType);
+    
+    if (searchTerm.trim()) {
+      rooms = searchChatRooms(searchTerm);
+    }
+    
+    return rooms;
+  };
+
+  const displayRooms = getDisplayRooms();
+
+  const handleSelectChat = (room: RealtimeChatRoom) => {
+    selectRoom(room.roomId);
+    onSelectChat({ 
+      type: room.type === 'one_to_one' ? "private" : "group", 
+      room 
+    });
+  };
+
+  const handleFilterChange = (newFilter: "all" | "classes" | "groups") => {
+    setFilterType(newFilter);
+  };
+
+  const formatTime = (timestamp: Date | string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffInHours < 24 * 7) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
   return (
-    <div className="h-full border-none sm:border-r p-4 bg-white rounded-lg sm:rounded-tl-lg  flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg">Messages</h2>
+    <div className={`w-full h-full border-r bg-white flex flex-col ${className}`}>
+      {/* Custom styles for hiding scrollbar */}
+      <style jsx>{`
+        .chat-list-container {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        .chat-list-container::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
+        }
+      `}</style>
+      
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100 bg-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          Messages
+          {isConnected ? (
+            <Wifi className="w-4 h-4 text-green-500" />
+          ) : (
+            <WifiOff className="w-4 h-4 text-red-500" />
+          )}
+        </h2>
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-500" />}
       </div>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center border border-[#F0F0F0] shadow-none rounded-lg px-3 w-full bg-white">
-          <Search className="text-[#898989]" size={18} />
+
+      {/* Search Section */}
+      <div className="p-3 sm:p-4 space-y-3 bg-white border-b border-gray-50">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
           <Input
-            className="border-0 shadow-none focus-visible:ring-0 focus:outline-none flex-1"
-            placeholder="Search"
+            className="pl-9 pr-4 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 transition-all duration-200 text-sm placeholder:text-gray-500 touch-manipulation"
+            placeholder="Search conversations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex text-[#595959] h-full rounded-lg shadow-none border-[#F0F0F0] items-center gap-1"
-            >
-              All <ChevronDown size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="font-manrope" align="end">
-            <DropdownMenuItem>Teachers</DropdownMenuItem>
-            <DropdownMenuItem>Students</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 text-gray-600 border-gray-200 hover:bg-gray-50 active:bg-gray-100 capitalize rounded-lg px-3 py-2.5 sm:py-2 text-xs touch-manipulation"
+              >
+                <Filter size={12} />
+                {filterType}
+                <ChevronDown size={12} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-32">
+              <DropdownMenuItem onClick={() => handleFilterChange('all')}>
+                All Chats
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleFilterChange('classes')}>
+                Classes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleFilterChange('groups')}>
+                Groups
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {conversations.map((conv, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-3 p-3 hover:bg-gray-200 rounded cursor-pointer"
-            onClick={() =>
-              onSelectChat({ type: conv.type as "private" | "group" })
-            }
+
+      {/* Error Display */}
+      {error && (
+        <div className="mx-3 sm:mx-4 mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+          <button 
+            onClick={refreshChatRooms}
+            className="text-xs text-red-700 underline mt-1 hover:text-red-800"
           >
-            <div className="relative w-10 h-10">
-              <Avatar className="w-10 h-10 rounded-full bg-gray-300">
-                <AvatarImage src={conv.avatar} />
-              </Avatar>
-              {conv.online === true && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-              )}
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Chat List */}
+      <div className="flex-1 overflow-y-auto bg-white chat-list-container">
+        {/* Connection Status */}
+        {!isConnected && (
+          <div className="flex items-center justify-center p-6 text-gray-500">
+            <div className="text-center">
+              <WifiOff className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm">Connecting to chat...</p>
             </div>
-            <div className="flex-1">
-              <p className="font-medium text-[#030E18] text-sm">{conv.name}</p>
-              <div className="flex items-center gap-1 max-w-[155px] truncate">
-                {conv.lastSender === "me" && (
-                  <CheckCheck className="w-4 h-4 text-[#7B7B7B]" />
-                )}
-                <p className="text-sm text-[#7B7B7B] truncate">
-                  {conv.lastMessage}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {isConnected && displayRooms.length === 0 && !isLoading && (
+          <div className="flex items-center justify-center p-6 text-gray-500">
+            <div className="text-center">
+              <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm">
+                {searchTerm ? 'No chats found' : 'No chats yet'}
+              </p>
+              {!searchTerm && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Join a class to start chatting
                 </p>
-              </div>
-            </div>
-            <div className="flex flex-col justify-between gap-2 items-end">
-              <span className="text-xs text-[#646464]">{conv.time}</span>
-              {conv.unread && (
-                <span className="w-3 h-[12px] bg-[#003366] rounded-full" />
               )}
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Chat Items */}
+        <div className="px-2 sm:px-3">
+          {displayRooms.map((room) => {
+            const roomInitials = room.displayName.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+            const roomBgColor = generateColorFromString(room.displayName);
+            
+            return (
+              <div
+                key={room.roomId}
+                className={`flex items-center gap-3 p-3 mx-1 hover:bg-gray-50 active:bg-gray-100 rounded-xl cursor-pointer transition-all duration-200 ${
+                  selectedRoomId === room.roomId 
+                    ? 'bg-blue-50 border border-blue-200 shadow-sm' 
+                    : ''
+                } touch-manipulation`}
+                onClick={() => handleSelectChat(room)}
+              >
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  {room.avatarInfo.type === 'image' ? (
+                    <img 
+                      src={room.avatarInfo.value} 
+                      alt={room.displayName}
+                      className="w-11 h-11 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                      style={{ backgroundColor: room.avatarInfo.bgColor || roomBgColor }}
+                    >
+                      {room.avatarInfo.value || roomInitials}
+                    </div>
+                  )}
+                  
+                  {/* Online indicator for private chats */}
+                  {room.type === 'one_to_one' && (
+                    <span 
+                      className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white rounded-full ${
+                        room.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      }`}
+                    />
+                  )}
+                  
+                  {/* Group indicator */}
+                  {room.type !== 'one_to_one' && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-full flex items-center justify-center">
+                      <Users className="w-2 h-2 text-white" />
+                    </span>
+                  )}
+                </div>
+
+                {/* Chat Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <h3 className="font-medium text-gray-900 truncate text-sm">
+                      {room.displayName}
+                    </h3>
+                    {room.lastMessage?.timestamp && (
+                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                        {formatTime(room.lastMessage.timestamp)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500 truncate pr-2">
+                      {room.lastMessage?.content || "No messages yet"}
+                    </p>
+                    {room.unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium text-white bg-blue-600 rounded-full">
+                        {room.unreadCount > 99 ? '99+' : room.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

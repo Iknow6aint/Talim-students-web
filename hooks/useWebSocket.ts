@@ -33,6 +33,66 @@ export interface NotificationData {
   read: boolean;
 }
 
+export interface ChatRoomData {
+  roomId: string;
+  name: string;
+  type: string;
+  participants: Array<{
+    _id: string;
+    userId: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+    userAvatar?: string | null;
+    isActive?: boolean;
+    isOnline: boolean;
+  }>;
+  lastMessage?: {
+    content: string;
+    senderId: string;
+    senderName: string;
+    timestamp: Date;
+    type: string;
+  };
+  unreadCount: number;
+  updatedAt: Date;
+  classId?: string;
+  courseId?: string;
+}
+
+export interface ChatRoomsUpdateData {
+  rooms: ChatRoomData[];
+  totalRooms: number;
+}
+
+export interface ChatRoomJoinedData {
+  roomId: string;
+  roomName: string;
+  roomType: string;
+  participants: Array<{
+    _id: string;
+    userId: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+    userAvatar?: string | null;
+    isActive?: boolean;
+    isOnline: boolean;
+  }>;
+  messages: ChatMessage[];
+  hasMore: boolean;
+  nextCursor?: string;
+  totalParticipants: number;
+}
+
+export interface FetchMessagesData {
+  roomId: string;
+  messages: ChatMessage[];
+  hasMore: boolean;
+  nextCursor?: string;
+  direction: 'before' | 'after';
+}
+
 export interface WebSocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -43,11 +103,16 @@ export interface WebSocketContextType {
   leaveChatRoom: (roomId: string) => void;
   sendChatMessage: (message: Omit<ChatMessage, '_id' | 'senderId' | 'timestamp' | 'readBy'>) => void;
   markMessageAsRead: (messageId: string) => void;
+  fetchChatRooms: () => void;
+  fetchMessages: (data: { roomId: string; cursor?: string; direction?: 'before' | 'after'; limit?: number }) => void;
   
   // Event listeners
   onChatMessage: (callback: (message: ChatMessage) => void) => () => void;
   onNotification: (callback: (notification: NotificationData) => void) => () => void;
-  onChatRoomHistory: (callback: (data: { roomId: string; messages: ChatMessage[] }) => void) => () => void;
+  onChatRoomHistory: (callback: (data: { roomId: string; messages: any[] }) => void) => () => void;
+  onChatRoomsUpdate: (callback: (data: ChatRoomsUpdateData) => void) => () => void;
+  onChatRoomJoined: (callback: (data: ChatRoomJoinedData) => void) => () => void;
+  onMessagesUpdate: (callback: (data: FetchMessagesData) => void) => () => void;
   
   // Connection management
   connect: (userId: string) => void;
@@ -233,6 +298,24 @@ export const useWebSocket = (): WebSocketContextType => {
     }
   }, []);
 
+  const fetchChatRooms = useCallback(() => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('fetch-chat-rooms');
+      console.log('📨 Fetching chat rooms');
+    } else {
+      toast.error('Not connected to chat service');
+    }
+  }, []);
+
+  const fetchMessages = useCallback((data: { roomId: string; cursor?: string; direction?: 'before' | 'after'; limit?: number }) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('fetch-messages', data);
+      console.log(`📨 Fetching messages for room: ${data.roomId}`);
+    } else {
+      toast.error('Not connected to chat service');
+    }
+  }, []);
+
   // Event listeners
   const onChatMessage = useCallback((callback: (message: ChatMessage) => void) => {
     if (!socketRef.current) return () => {};
@@ -261,12 +344,39 @@ export const useWebSocket = (): WebSocketContextType => {
     };
   }, []);
 
-  const onChatRoomHistory = useCallback((callback: (data: { roomId: string; messages: ChatMessage[] }) => void) => {
+  const onChatRoomHistory = useCallback((callback: (data: { roomId: string; messages: any[] }) => void) => {
     if (!socketRef.current) return () => {};
 
     socketRef.current.on('chat-room-history', callback);
     return () => {
       socketRef.current?.off('chat-room-history', callback);
+    };
+  }, []);
+
+  const onChatRoomsUpdate = useCallback((callback: (data: ChatRoomsUpdateData) => void) => {
+    if (!socketRef.current) return () => {};
+
+    socketRef.current.on('chat-rooms-update', callback);
+    return () => {
+      socketRef.current?.off('chat-rooms-update', callback);
+    };
+  }, []);
+
+  const onChatRoomJoined = useCallback((callback: (data: ChatRoomJoinedData) => void) => {
+    if (!socketRef.current) return () => {};
+
+    socketRef.current.on('chat-room-joined', callback);
+    return () => {
+      socketRef.current?.off('chat-room-joined', callback);
+    };
+  }, []);
+
+  const onMessagesUpdate = useCallback((callback: (data: FetchMessagesData) => void) => {
+    if (!socketRef.current) return () => {};
+
+    socketRef.current.on('messages-update', callback);
+    return () => {
+      socketRef.current?.off('messages-update', callback);
     };
   }, []);
 
@@ -287,11 +397,16 @@ export const useWebSocket = (): WebSocketContextType => {
     leaveChatRoom,
     sendChatMessage,
     markMessageAsRead,
+    fetchChatRooms,
+    fetchMessages,
     
     // Event listeners
     onChatMessage,
     onNotification,
     onChatRoomHistory,
+    onChatRoomsUpdate,
+    onChatRoomJoined,
+    onMessagesUpdate,
     
     // Connection management
     connect,
