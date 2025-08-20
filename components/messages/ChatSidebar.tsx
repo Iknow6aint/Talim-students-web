@@ -12,26 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useChat, RealtimeChatRoom } from "@/hooks/useChat";
-
-// Utility function to generate consistent colors from strings (matching Teachers app)
-function generateColorFromString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  
-  // Use Material Design color palette
-  const colors = [
-    '#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5',
-    '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50',
-    '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800',
-    '#FF5722', '#795548', '#607D8B'
-  ];
-  
-  return colors[Math.abs(hash) % colors.length];
-}
+import { generateColorFromString } from "@/lib/colorUtils";
 
 interface ChatSidebarProps {
   onSelectChat: (chat: { type: "private" | "group"; room?: RealtimeChatRoom }) => void;

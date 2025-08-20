@@ -59,7 +59,8 @@ export default function MessageInput({
         <button
           className={`p-2 rounded-full transition-all duration-200 ${
             message.trim() && !disabled && !isSending
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
+
+            ? "bg-blue-500 hover:bg-blue-600 text-white"
               : "bg-gray-100 text-gray-400"
           }`}
           onClick={handleSendMessage}

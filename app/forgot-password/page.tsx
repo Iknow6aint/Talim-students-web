@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -360,12 +361,12 @@ const ForgotPasswordPage: React.FC = () => {
           {/* Sign In Link */}
           <div className="text-center">
             <span className="text-sm text-[#444444]">Remember your password? </span>
-            <a
+            <Link
               href="/"
               className="text-sm text-[#003366] hover:underline font-medium"
             >
               Sign In
-            </a>
+            </Link>
           </div>
         </div>
       </div>
