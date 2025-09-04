@@ -1,3 +1,4 @@
+"use client";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -7,16 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useResources } from "@/hooks/useResource";
+import { Resource } from "@/services/resource.service";
 import { FileText, Image, Video, AlignLeft, Download } from "lucide-react";
-
-interface Resource {
-  id: string;
-  name: string;
-  subject: string;
-  uploadDate: string;
-  teacherName: string;
-  type: "pdf" | "img" | "vid" | "txt";
-}
 
 const getFileIcon = (type: Resource["type"]) => {
   switch (type) {
@@ -31,17 +25,14 @@ const getFileIcon = (type: Resource["type"]) => {
   }
 };
 
-interface ResourcesTableProps {
-  resources: Resource[];
-}
+export function ResourcesTable() {
+  const { isLoading, resources } = useResources();
 
-export function ResourcesTable({ resources }: ResourcesTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>
-            {" "}
             <Checkbox /> Name
           </TableHead>
           <TableHead>Subject</TableHead>
@@ -50,26 +41,37 @@ export function ResourcesTable({ resources }: ResourcesTableProps) {
           <TableHead>Download file</TableHead>
         </TableRow>
       </TableHeader>
+
       <TableBody>
-        {resources.map((resource) => (
-          <TableRow key={resource.id}>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                {getFileIcon(resource.type)}
-                <span>{resource.name}</span>
-              </div>
-            </TableCell>
-            <TableCell>{resource.subject}</TableCell>
-            <TableCell className="text-[#616161]">{resource.uploadDate}</TableCell>
-            <TableCell>{resource.teacherName}</TableCell>
-            <TableCell className="bg-[#ADBECE] hover:bg-blue-200">
-              <button className="flex items-center justify-center w-full py-4 text-sm text-white  transition-colors">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </button>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+              Loading resources...
             </TableCell>
           </TableRow>
-        ))}
+        ) : (
+          resources.map((resource) => (
+            <TableRow key={resource._id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {getFileIcon(resource.type)}
+                  <span>{resource.name.toUpperCase()}</span>
+                </div>
+              </TableCell>
+              <TableCell>{resource.subject}</TableCell>
+              <TableCell className="text-[#616161]">
+                {new Date(resource.uploadDate).toLocaleDateString()}
+              </TableCell>
+              <TableCell>{resource.uploadedBy}</TableCell>
+              <TableCell className="bg-[#ADBECE] hover:bg-blue-200">
+                <button className="flex items-center justify-center w-full py-4 text-sm text-white transition-colors">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </button>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
       </TableBody>
     </Table>
   );

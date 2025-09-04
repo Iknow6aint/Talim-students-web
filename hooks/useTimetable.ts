@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
-import {  AcademicResponse, Timetable } from "@/types/auth";
+import { AcademicResponse, Timetable } from "@/types/auth";
 import { timetableService } from "@/services/timetable.service";
 import { API_ENDPOINTS } from "@/lib/constants";
 
@@ -49,7 +49,10 @@ export const useTimetable = () => {
       setIsLoading(true);
 
       // Fetch classId from student details
-      const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(":userId", user.id);
+      const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(
+        ":userId",
+        user.id
+      );
       const studentResponse = await fetch(studentUrl, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -70,7 +73,8 @@ export const useTimetable = () => {
       }
 
       // Fetch timetable
-      const timetableData: Timetable = await timetableService.getTimetableByClass(classId, accessToken);
+      const timetableData: Timetable =
+        await timetableService.getTimetableByClass(classId, accessToken);
 
       // Transform to desired format
       const timetableSubjects: TimetableSubject[] = [];
@@ -81,7 +85,9 @@ export const useTimetable = () => {
         entries.forEach((entry) => {
           const start = parseTimeToDecimal(entry.startTIme);
           const end = parseTimeToDecimal(entry.endTime);
-          const timeString = `${formatTime(entry.startTIme)} - ${formatTime(entry.endTime)}`;
+          const timeString = `${formatTime(entry.startTIme)} - ${formatTime(
+            entry.endTime
+          )}`;
           timetableSubjects.push({
             name: entry.subject,
             day,
@@ -94,7 +100,8 @@ export const useTimetable = () => {
 
       setSubjects(timetableSubjects);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to load timetable";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load timetable";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
