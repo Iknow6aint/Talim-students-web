@@ -16,4 +16,5 @@ export const API_ENDPOINTS = {
   CURRICULUM_BASE: `${API_BASE_URL}/curriculum`,
   CURRICULUM_BY_COURSE: `${API_BASE_URL}/curriculum/course/:courseId`,
   SUBJECTS_BY_SCHOOL: `${API_BASE_URL}/subjects-courses/by-school`,
+  RESOURCES_BY_CLASS: `${API_BASE_URL}/resources/class/:classId`,
 } as const;

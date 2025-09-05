@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </div>
             <span className="ml-2 text-lg font-semibold text-[#030E18]">Talim</span>
           </div>
-          <div className="border border-[#003366] border-2 rounded-md md:hidden" onClick={onClose}>
+          <div className="border border-[#003366] rounded-md md:hidden" onClick={onClose}>
             <ChevronLeft className="text-[#003366]" />
           </div>
         </div>

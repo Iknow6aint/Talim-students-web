@@ -1,4 +1,8 @@
 "use client";
+import {
+  AttendanceSkelenton,
+  MetricCardSkeleton,
+} from "@/components/CardSkelenton";
 // pages/attendance.tsx
 import Layout from "@/components/Layout";
 import CustomCalendar from "@/components/attendance/AttendanceCalendar";
@@ -36,7 +40,11 @@ function AttendancePage() {
         <p>Attendance</p>
         <div className="flex flex-col gap-6">
           {isLoading ? (
-            <p>Loading attendance data...</p>
+            <div className="grid grid-cols-3 gap-6">
+              <MetricCardSkeleton />
+              <MetricCardSkeleton />
+              <MetricCardSkeleton />
+            </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <MetricCard
@@ -56,7 +64,7 @@ function AttendancePage() {
               />
             </div>
           )}
-          <CustomCalendar />
+          {isLoading ? <AttendanceSkelenton /> : <CustomCalendar />}
         </div>
       </div>
     </Layout>
