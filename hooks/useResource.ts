@@ -12,7 +12,7 @@ export const useResources = () => {
   const [resources, setResources] = useState<Resource[]>([]); // Fetch from the interface
 
   const FetchResource = async () => {
-    if (!isAuthenticated || !user?.id || !accessToken) {
+    if (!isAuthenticated || !user?.userId || !accessToken) {
       toast.error("User not authenticated");
       return;
     }
@@ -23,7 +23,7 @@ export const useResources = () => {
       // Fetch student details
       const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(
         ":userId",
-        user.id
+        user.userId
       );
       const studentResponse = await fetch(studentUrl, {
         headers: {

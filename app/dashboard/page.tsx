@@ -5,7 +5,7 @@ import { MetricCard } from "@/components/metric-card";
 import Layout from "@/components/Layout";
 import Image from "next/image";
 import Timetable from "@/components/Timetable";
-import { useAttendance } from "@/hooks/useAttendance";
+import { useStudentKPIs } from "@/hooks/useStudentKPIs";
 import { useAuthContext } from "@/contexts/AuthContext";
 import {
   MetricCardSkeleton,
@@ -14,14 +14,22 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { attendanceData, isLoading } = useAttendance();
+  const { kpiData, isLoading, error } = useStudentKPIs();
 
-  // Metrics with dynamic attendance percentage
+  // Metrics with real KPI data
   const metrics = {
-    subjects: { value: 15, message: "See more", link: "/subjects" },
-    gradeScore: { value: 85, message: "See more", link: "/results" },
+    subjects: {
+      value: kpiData?.subjectsEnrolled || 0,
+      message: "See more",
+      link: "/subjects",
+    },
+    gradeScore: {
+      value: kpiData?.gradeScore || 0,
+      message: "See more",
+      link: "/results",
+    },
     attendancePercentage: {
-      value: attendanceData ? attendanceData.attendancePercentage : "N/A",
+      value: kpiData?.attendancePercentage || 0,
       message: "See more",
       link: "/attendance",
     },
@@ -41,6 +49,10 @@ export default function DashboardPage() {
                   <MetricCardSkeleton />
                   <MetricCardSkeleton />
                 </>
+              ) : error ? (
+                <div className="col-span-full text-center text-red-500 p-4">
+                  <p>Error loading dashboard data: {error}</p>
+                </div>
               ) : (
                 <>
                   <MetricCard
@@ -66,7 +78,7 @@ export default function DashboardPage() {
                         className="h-[52px] w-[52px]"
                       />
                     }
-                    value={metrics.gradeScore.value}
+                    value={`${metrics.gradeScore.value}%`}
                     label="Grade Score"
                     message={metrics.gradeScore.message}
                     link={metrics.gradeScore.link}
@@ -79,7 +91,7 @@ export default function DashboardPage() {
                         className="h-[52px] w-[52px]"
                       />
                     }
-                    value={metrics.attendancePercentage.value}
+                    value={`${metrics.attendancePercentage.value}%`}
                     label="Attendance Percentage"
                     message={metrics.attendancePercentage.message}
                     link={metrics.attendancePercentage.link}

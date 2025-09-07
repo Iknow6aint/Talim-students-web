@@ -6,10 +6,9 @@ export interface LoginCredentials {
   platform: string;
 }
 
-
-
 export interface User {
-  id: string;
+  id?: string; // For backward compatibility
+  userId?: string; // From introspect response
   firstName: string;
   lastName: string;
   email: string;
@@ -18,6 +17,9 @@ export interface User {
   role?: string;
   isActive?: boolean;
   isEmailVerified?: boolean;
+  schoolId?: string;
+  schoolName?: string;
+  studentId?: string; // The actual student profile ID
   [key: string]: any;
 }
 

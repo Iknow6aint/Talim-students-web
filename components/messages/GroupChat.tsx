@@ -53,7 +53,7 @@ const GroupChat = ({
 
         // For students app, prioritize user.id over user.userId
         const possibleIds = [
-            user.id,
+            user.userId,
             user.userId,
             (user as any)._id, // fallback for different user object structures
         ].filter(Boolean);
@@ -161,7 +161,7 @@ const GroupChat = ({
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                id: user.id,
+                id: user.userId,
                 userId: user.userId
             } : null
         });
@@ -212,7 +212,7 @@ const GroupChat = ({
             messageText,
             messageTime,
             currentUser: user ? {
-                id: user.id,
+                id: user.userId,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim()

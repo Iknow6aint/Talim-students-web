@@ -14,7 +14,7 @@ export const useAttendance = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAttendance = async () => {
-    if (!user?.id || !accessToken) {
+    if (!user?.userId || !accessToken) {
       toast.error("User not authenticated");
       setIsLoading(false);
       return;
@@ -24,7 +24,7 @@ export const useAttendance = () => {
       setIsLoading(true);
 
       // Step 1: Fetch student ID
-      const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(":userId", user.id);
+      const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(":userId", user.userId);
       const studentResponse = await fetch(studentUrl, {
         method: "GET",
         headers: {

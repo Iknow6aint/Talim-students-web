@@ -39,7 +39,7 @@ export const useTimetable = () => {
   };
 
   const fetchTimetable = async () => {
-    if (!isAuthenticated || !user?.id || !accessToken) {
+    if (!isAuthenticated || !user?.userId || !accessToken) {
       toast.error("User not authenticated");
       setIsLoading(false);
       return;
@@ -51,7 +51,7 @@ export const useTimetable = () => {
       // Fetch classId from student details
       const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(
         ":userId",
-        user.id
+        user.userId
       );
       const studentResponse = await fetch(studentUrl, {
         headers: {

@@ -19,9 +19,18 @@ const menuItems: MenuItem[] = [
   { label: "Subjects", iconPath: "/icons/subjects.svg", link: "/subjects" },
   { label: "Resources", iconPath: "/icons/resources.svg", link: "/resources" },
   { label: "Timetable", iconPath: "/icons/timetable.svg", link: "/timetable" },
-  { label: "Attendance", iconPath: "/icons/attendance.svg", link: "/attendance" },
+  {
+    label: "Attendance",
+    iconPath: "/icons/attendance.svg",
+    link: "/attendance",
+  },
   { label: "Results", iconPath: "/icons/results.svg", link: "/results" },
-  { label: "Messages", iconPath: "/icons/messages.svg", link: "/messages", notification: 5 },
+  {
+    label: "Messages",
+    iconPath: "/icons/messages.svg",
+    link: "/messages",
+    notification: 5,
+  },
 ];
 
 interface SidebarProps {
@@ -31,7 +40,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname();
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
 
   const handleLogout = () => {
     logout();
@@ -43,18 +52,30 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center py-2 justify-between">
           <div className="flex items-center">
             <div className="text-white p-3 rounded-lg">
-              <Image src="/icons/talim.svg" alt="School" width={44.29} height={43.23} />
+              <Image
+                src="/icons/talim.svg"
+                alt="School"
+                width={44.29}
+                height={43.23}
+              />
             </div>
-            <span className="ml-2 text-lg font-semibold text-[#030E18]">Talim</span>
+            <span className="ml-2 text-lg font-semibold text-[#030E18]">
+              Talim
+            </span>
           </div>
-          <div className="border border-[#003366] rounded-md md:hidden" onClick={onClose}>
+          <div
+            className="border border-[#003366] rounded-md md:hidden"
+            onClick={onClose}
+          >
             <ChevronLeft className="text-[#003366]" />
           </div>
         </div>
         <div className="mb-4 border-b border-2 border-solid border-[#F1F1F1] -mx-4"></div>
         <div className="flex items-center px-2 py-3 border-2 border-solid border-[#F1F1F1] bg-[#FBFBFB] rounded-md mb-4">
           <Image src="/unity.png" alt="School" width={40} height={40} />
-          <span className="ml-2 font-medium text-base text-gray-700">Unity Secondary S...</span>
+          <span className="ml-2 font-medium text-base text-gray-700">
+            {user?.schoolName || "Unity Secondary S..."}
+          </span>
         </div>
         <nav>
           <ul>
@@ -65,11 +86,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <Link href={item.link || "#"}>
                     <div
                       className={`flex items-center px-3 py-2 rounded-md cursor-pointer ${
-                        isActive ? "bg-[#003366] bg-opacity-25 text-[#003366]" : "text-gray-600 hover:bg-gray-100"
+                        isActive
+                          ? "bg-[#003366] bg-opacity-25 text-[#003366]"
+                          : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      <Image src={item.iconPath} alt={item.label} width={20} height={20} />
-                      <span className="font-manrope text-base ml-3 font-medium">{item.label}</span>
+                      <Image
+                        src={item.iconPath}
+                        alt={item.label}
+                        width={20}
+                        height={20}
+                      />
+                      <span className="font-manrope text-base ml-3 font-medium">
+                        {item.label}
+                      </span>
                       {item.notification && (
                         <span className="ml-auto bg-blue-900 text-white text-sm w-5 h-5 flex items-center justify-center rounded-full">
                           {item.notification}

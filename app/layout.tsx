@@ -28,7 +28,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       isLoading,
       pathname,
       isPublicRoute,
-      user: user ? { id: user.id, email: user.email } : null
+      user: user ? { id: user.userId, email: user.email } : null
     });
   }, [isAuthenticated, isLoading, pathname, isPublicRoute, user]);
 

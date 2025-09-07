@@ -56,7 +56,7 @@ export const useAcademicDetails = () => {
       }
 
       // Fetch fresh data
-      const freshData = await studentService.getAcademicDetails(user.id, accessToken);
+      const freshData = await studentService.getAcademicDetails(user.userId, accessToken);
       setAcademicData(freshData);
       saveToCache(freshData);
 

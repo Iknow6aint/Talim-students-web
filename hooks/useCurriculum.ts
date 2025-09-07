@@ -21,11 +21,11 @@ export const useCurriculum = () => {
 
   // Fetch student details to get class ID
   const fetchStudentDetails = async () => {
-    if (!accessToken || !isAuthenticated || !user?.id) return;
+    if (!accessToken || !isAuthenticated || !user?.userId) return;
 
     try {
-      console.log(`Hook: Fetching student details for user: ${user.id}`);
-      const studentData: AcademicResponse = await studentService.getAcademicDetails(user.id, accessToken);
+      console.log(`Hook: Fetching student details for user: ${user.userId}`);
+      const studentData: AcademicResponse = await studentService.getAcademicDetails(user.userId, accessToken);
       console.log(`Hook: Student data received:`, studentData);
       
       const classId = studentData.data[0]?.classId;
