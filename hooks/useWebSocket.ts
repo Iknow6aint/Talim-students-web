@@ -3,7 +3,8 @@ import { io, Socket } from "socket.io-client";
 import { toast } from "react-hot-toast";
 
 // WebSocket connection configuration
-const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:5005';
+const WEBSOCKET_URL =
+  process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:5005";
 
 // Event types that match the backend gateway
 export interface ChatMessage {
@@ -135,6 +136,25 @@ export interface WebSocketContextType {
   reconnect: () => void;
 }
 
+// Toast deduplication to prevent spam
+const lastToastTime = new Map<string, number>();
+const TOAST_COOLDOWN = 5000; // 5 seconds between same toasts
+
+function showToast(type: "success" | "error", message: string) {
+  const key = `${type}:${message}`;
+  const now = Date.now();
+  const lastTime = lastToastTime.get(key) || 0;
+
+  if (now - lastTime > TOAST_COOLDOWN) {
+    lastToastTime.set(key, now);
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
+  }
+}
+
 export const useWebSocket = (): WebSocketContextType => {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -143,62 +163,71 @@ export const useWebSocket = (): WebSocketContextType => {
   >("disconnected");
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const lastFailedAttemptRef = useRef(0);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log("🔍 WebSocket state changed:", {
-      isConnected,
-      connectionStatus,
-    });
-  }, [isConnected, connectionStatus]);
+  const maxReconnectAttempts = 3;
+  const reconnectCooldown = 30000; // 30 seconds cooldown
 
   // Connect to WebSocket
   const connect = useCallback(
     (userId: string) => {
       // Prevent multiple connections
       if (socketRef.current?.connected) {
-        console.log("WebSocket already connected, skipping connection attempt");
+        console.log("🔌 Already connected to WebSocket");
         return;
       }
 
       // Prevent multiple connection attempts while connecting
       if (connectionStatus === "connecting") {
-        console.log(
-          "WebSocket connection in progress, skipping duplicate attempt"
-        );
+        console.log("🔌 Connection in progress, skipping duplicate attempt");
         return;
       }
 
-      console.log("🔌 Attempting to connect to WebSocket...", {
-        url: WEBSOCKET_URL,
-        userId,
-        env: process.env.NEXT_PUBLIC_WEBSOCKET_URL,
-      });
+      // Check cooldown period
+      const now = Date.now();
+      if (
+        reconnectAttemptsRef.current >= maxReconnectAttempts &&
+        now - lastFailedAttemptRef.current < reconnectCooldown
+      ) {
+        console.log("🔌 Still in cooldown period, skipping connection attempt");
+        return;
+      }
 
+      // Reset attempts if cooldown period has passed
+      if (now - lastFailedAttemptRef.current >= reconnectCooldown) {
+        reconnectAttemptsRef.current = 0;
+      }
+
+      console.log(`🔌 Connecting to WebSocket with userId: ${userId}`);
       setConnectionStatus("connecting");
       userIdRef.current = userId;
 
       try {
         const socket = io(WEBSOCKET_URL, {
-          query: { userId },
-          transports: ["websocket", "polling"],
-          timeout: 20000,
-          reconnection: true,
-          reconnectionDelay: 1000,
-          reconnectionAttempts: 10,
+          auth: { userId },
+          transports: ["websocket"],
+          upgrade: false,
+          rememberUpgrade: false,
+          timeout: 10000,
+          // Disable automatic reconnection to prevent double reconnection
+          reconnection: false,
         });
 
         // Connection successful
         socket.on("connect", () => {
-          console.log("🔌 WebSocket connected:", socket.id);
-          console.log(
-            "🔌 Setting state: isConnected=true, connectionStatus=connected"
-          );
+          console.log("🔌 WebSocket connected successfully");
           setIsConnected(true);
           setConnectionStatus("connected");
-          toast.success("Connected to real-time services");
 
-          // Clear any pending reconnection attempts
+          // Only show success toast on reconnection after failures
+          if (reconnectAttemptsRef.current > 0) {
+            showToast("success", "Connection restored");
+          }
+
+          reconnectAttemptsRef.current = 0; // Reset attempts on successful connection
+
+          // Clear any pending reconnection timeout
           if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
             reconnectTimeoutRef.current = null;
@@ -208,9 +237,20 @@ export const useWebSocket = (): WebSocketContextType => {
         // Connection failed
         socket.on("connect_error", (error) => {
           console.error("🔌 WebSocket connection error:", error);
+          reconnectAttemptsRef.current++;
+          lastFailedAttemptRef.current = Date.now();
           setIsConnected(false);
           setConnectionStatus("error");
-          toast.error("Failed to connect to real-time services");
+
+          if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+            console.log(
+              `🔌 Max reconnection attempts (${maxReconnectAttempts}) reached. Entering cooldown.`
+            );
+            showToast("error", "Unable to connect to real-time services");
+          } else if (reconnectAttemptsRef.current === 1) {
+            // Only show error on first attempt to avoid spam
+            showToast("error", "Connection failed, retrying...");
+          }
         });
 
         // Disconnection
@@ -221,51 +261,49 @@ export const useWebSocket = (): WebSocketContextType => {
 
           // Don't show toast for intentional disconnections
           if (reason !== "io client disconnect") {
-            toast.error("Connection lost");
+            showToast("error", "Connection lost");
 
-            // Attempt to reconnect after a delay
-            if (userIdRef.current && reason !== "io server disconnect") {
+            // Only attempt to reconnect if we haven't exceeded max attempts
+            if (
+              userIdRef.current &&
+              reason !== "io server disconnect" &&
+              reconnectAttemptsRef.current < maxReconnectAttempts
+            ) {
+              const delay = Math.min(
+                3000 * Math.pow(2, reconnectAttemptsRef.current),
+                30000
+              ); // Exponential backoff
               reconnectTimeoutRef.current = setTimeout(() => {
-                console.log("🔄 Attempting to reconnect...");
+                console.log(
+                  `🔄 Attempting to reconnect... (attempt ${
+                    reconnectAttemptsRef.current + 1
+                  }/${maxReconnectAttempts})`
+                );
                 reconnect();
-              }, 3000);
+              }, delay);
+            } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+              console.log(
+                "🔌 Max reconnection attempts reached. Manual reconnection required."
+              );
             }
           }
         });
 
         // Error handling
         socket.on("error", (error) => {
-          console.error("🔌 WebSocket error:", error);
-          toast.error("WebSocket error occurred");
-        });
-
-        // Reconnection events
-        socket.on("reconnect", (attemptNumber) => {
-          console.log(
-            `🔄 WebSocket reconnected after ${attemptNumber} attempts`
-          );
-          toast.success("Reconnected to real-time services");
-        });
-
-        socket.on("reconnect_error", (error) => {
-          console.error("🔄 WebSocket reconnection failed:", error);
-        });
-
-        socket.on("reconnect_failed", () => {
-          console.error("🔄 WebSocket reconnection failed after max attempts");
-          toast.error("Unable to reconnect. Please refresh the page.");
-          setConnectionStatus("error");
+          console.error("� WebSocket error:", error);
+          // Don't show toast for every error to avoid spam
         });
 
         socketRef.current = socket;
       } catch (error) {
         console.error("Failed to create WebSocket connection:", error);
         setConnectionStatus("error");
-        toast.error("Failed to initialize WebSocket connection");
+        showToast("error", "Failed to initialize WebSocket connection");
       }
     },
     [connectionStatus]
-  ); // Add connectionStatus as dependency
+  );
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
@@ -282,6 +320,7 @@ export const useWebSocket = (): WebSocketContextType => {
     setIsConnected(false);
     setConnectionStatus("disconnected");
     userIdRef.current = null;
+    reconnectAttemptsRef.current = 0; // Reset attempts on manual disconnect
     console.log("🔌 WebSocket manually disconnected");
   }, []);
 
@@ -376,13 +415,11 @@ export const useWebSocket = (): WebSocketContextType => {
       if (!socketRef.current) return () => {};
 
       socketRef.current.on("notification", (notification: NotificationData) => {
-        // Show toast notification
-        toast.success(`${notification.title}: ${notification.body}`, {
-          duration: 4000,
-          position: "top-right",
-        });
-
+        console.log("🔔 Received notification:", notification);
         callback(notification);
+
+        // Show toast notification with deduplication
+        showToast("success", notification.title);
       });
 
       return () => {

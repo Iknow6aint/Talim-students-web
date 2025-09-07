@@ -40,7 +40,7 @@ export function useResources() {
         // 1) fetch student → classId
         const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(
           ":userId",
-          user.id
+          user.id || user.userId || ""
         );
         const studRes = await axios.get<{ data: Array<{ classId: string }> }>(
           studentUrl,

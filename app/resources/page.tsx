@@ -1,3 +1,5 @@
+"use client";
+
 import { ResourcesTable } from "@/components/resources/resources-table";
 import { Pagination } from "@/components/Subject/pagination";
 import { Input } from "@/components/ui/input";
