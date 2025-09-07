@@ -1,15 +1,15 @@
 "use client";
 
-import { AuthProvider } from '@/contexts/AuthContext'
-import { WebSocketProvider } from '@/contexts/WebSocketContext'
-import './globals.css'
-import { Inter } from 'next/font/google'
-import { Toaster } from 'react-hot-toast'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { useAuthContext } from '@/contexts/AuthContext'
+import { AuthProvider } from "@/contexts/AuthContext";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
+import "./globals.css";
+import { Inter } from "next/font/google";
+import { Toaster } from "react-hot-toast";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 // Component to handle auth checks
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -17,18 +17,23 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Set consistent title for all pages
+  useEffect(() => {
+    document.title = "Talim Students";
+  }, [pathname]);
+
   // Routes that don't require authentication
   const publicRoutes = ["/", "/signin", "/register", "/forgot-password"];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // Debug auth state
   useEffect(() => {
-    console.log('🔍 AuthGuard state:', {
+    console.log("🔍 AuthGuard state:", {
       isAuthenticated,
       isLoading,
       pathname,
       isPublicRoute,
-      user: user ? { id: user.userId, email: user.email } : null
+      user: user ? { id: user.userId, email: user.email } : null,
     });
   }, [isAuthenticated, isLoading, pathname, isPublicRoute, user]);
 
@@ -36,11 +41,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isLoading) {
       if (!isAuthenticated && !isPublicRoute) {
         // User is not authenticated and trying to access protected route
-        console.log('🔒 User not authenticated, redirecting to signin');
+        console.log("🔒 User not authenticated, redirecting to signin");
         router.push("/signin");
-      } else if (isAuthenticated && (pathname === "/signin" || pathname === "/")) {
+      } else if (
+        isAuthenticated &&
+        (pathname === "/signin" || pathname === "/")
+      ) {
         // User is authenticated and on signin or root page, redirect to dashboard
-        console.log('🔓 User authenticated, redirecting to dashboard');
+        console.log("🔓 User authenticated, redirecting to dashboard");
         router.push("/dashboard");
       }
     }
@@ -64,7 +72,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
@@ -79,5 +87,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }
