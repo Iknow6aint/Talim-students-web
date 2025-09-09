@@ -23,7 +23,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <header className="font-manrope px-5 border-b sm:border-b-2 border-b-[#F0F0F0] pb-4">
       {/* Top row: Menu, Date, Notifications, Avatar */}
-      <div className="flex flex-col  sm:flex-row items-center w-full justify-between gap-4 py-3">
+      <div className="flex flex-col  sm:flex-row items-center w-full justify-end gap-4 py-3">
         {/* Menu Button (Only on Mobile) */}
         <div className="flex items-center w-full sm:w-auto justify-between">
           <div

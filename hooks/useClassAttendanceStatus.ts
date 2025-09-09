@@ -1,73 +1,54 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { studentService } from "@/services/student.service";
+import {
+  attendanceService,
+  ClassAttendanceStatus,
+} from "@/services/attendance.service";
 
-export interface StudentKPIData {
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  classInfo: {
-    id: string;
-    name: string;
-  };
-  subjectsEnrolled: number;
-  gradeScore: number;
-  attendancePercentage: number;
-  additionalMetrics: {
-    totalAssessments: number;
-    completedAssessments: number;
-    currentTerm: {
-      id: string;
-      name: string;
-    };
-    classRank: number;
-    totalStudentsInClass: number;
-  };
-}
-
-export const useStudentKPIs = (studentId?: string, termId?: string) => {
-  const [kpiData, setKpiData] = useState<StudentKPIData | null>(null);
+export const useClassAttendanceStatus = (date?: string) => {
+  const [classAttendanceData, setClassAttendanceData] =
+    useState<ClassAttendanceStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { user, accessToken } = useAuthContext();
 
   useEffect(() => {
-    const fetchKPIs = async () => {
+    const fetchClassAttendanceStatus = async () => {
       if (!accessToken) {
         setError("No access token available");
         setIsLoading(false);
         return;
       }
 
-      // Use provided studentId or get from user context
-      // Priority: explicit studentId > user.studentId > user.id > user.userId
-      const targetStudentId =
-        studentId || user?.studentId || user?.id || user?.userId;
+      // Get classId from user context
+      const classId = user?.classId;
 
-      if (!targetStudentId) {
-        setError("No student ID available");
+      if (!classId) {
+        setError("No class ID available");
         setIsLoading(false);
         return;
       }
+
+      // Use provided date or today's date
+      const targetDate = date || new Date().toISOString().split("T")[0];
 
       try {
         setIsLoading(true);
         setError(null);
 
-        const data = await studentService.getDashboardKPIs(
-          targetStudentId,
-          accessToken,
-          termId
+        const data = await attendanceService.getClassAttendanceStatus(
+          classId,
+          targetDate,
+          accessToken
         );
 
-        setKpiData(data);
+        setClassAttendanceData(data);
       } catch (err) {
-        console.error("Error fetching student KPIs:", err);
+        console.error("Error fetching class attendance status:", err);
 
         // Provide more specific error messages
-        let errorMessage = "Failed to fetch student data";
+        let errorMessage = "Failed to fetch class attendance data";
 
         if (err instanceof Error) {
           if (err.message.includes("fetch")) {
@@ -81,7 +62,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
           } else if (err.message.includes("403")) {
             errorMessage = "You don't have permission to access this data.";
           } else if (err.message.includes("404")) {
-            errorMessage = "Student data not found. Please contact support.";
+            errorMessage = "Class attendance data not found.";
           } else if (err.message.includes("500")) {
             errorMessage = "Server error. Please try again later.";
           } else {
@@ -95,23 +76,25 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
       }
     };
 
-    fetchKPIs();
-  }, [accessToken, studentId, user?.studentId, user?.id, user?.userId, termId]);
+    fetchClassAttendanceStatus();
+  }, [accessToken, user?.classId, date]);
 
-  const refetch = () => {
-    const targetStudentId =
-      studentId || user?.studentId || user?.id || user?.userId;
-    if (accessToken && targetStudentId) {
+  const refetch = (newDate?: string) => {
+    const classId = user?.classId;
+    const targetDate =
+      newDate || date || new Date().toISOString().split("T")[0];
+
+    if (accessToken && classId) {
       setIsLoading(true);
-      setError(null); // Clear previous errors
+      setError(null);
 
-      studentService
-        .getDashboardKPIs(targetStudentId, accessToken, termId)
-        .then(setKpiData)
+      attendanceService
+        .getClassAttendanceStatus(classId, targetDate, accessToken)
+        .then(setClassAttendanceData)
         .catch((err) => {
-          console.error("Error refetching student KPIs:", err);
+          console.error("Error refetching class attendance status:", err);
 
-          let errorMessage = "Failed to refresh student data";
+          let errorMessage = "Failed to refresh class attendance data";
 
           if (err instanceof Error) {
             if (err.message.includes("fetch")) {
@@ -125,7 +108,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
             } else if (err.message.includes("403")) {
               errorMessage = "You don't have permission to access this data.";
             } else if (err.message.includes("404")) {
-              errorMessage = "Student data not found. Please contact support.";
+              errorMessage = "Class attendance data not found.";
             } else if (err.message.includes("500")) {
               errorMessage = "Server error. Please try again later.";
             } else {
@@ -140,7 +123,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
   };
 
   return {
-    kpiData,
+    classAttendanceData,
     isLoading,
     error,
     refetch,

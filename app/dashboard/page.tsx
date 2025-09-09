@@ -11,10 +11,35 @@ import {
   MetricCardSkeleton,
   TimetableSkeleton,
 } from "@/components/CardSkelenton";
+import { ErrorDisplay, CompactErrorDisplay } from "@/components/ErrorDisplay";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { kpiData, isLoading, error } = useStudentKPIs();
+  const { kpiData, isLoading, error, refetch } = useStudentKPIs();
+
+  // Determine error variant based on error message
+  const getErrorVariant = (errorMessage: string) => {
+    const lowerError = errorMessage.toLowerCase();
+    if (
+      lowerError.includes("network") ||
+      lowerError.includes("fetch") ||
+      lowerError.includes("connection")
+    ) {
+      return "network";
+    }
+    if (
+      lowerError.includes("unauthorized") ||
+      lowerError.includes("token") ||
+      lowerError.includes("authentication")
+    ) {
+      return "auth";
+    }
+    if (lowerError.includes("500") || lowerError.includes("server")) {
+      return "server";
+    }
+    return "default";
+  };
 
   // Metrics with real KPI data
   const metrics = {
@@ -50,8 +75,22 @@ export default function DashboardPage() {
                   <MetricCardSkeleton />
                 </>
               ) : error ? (
-                <div className="col-span-full text-center text-red-500 p-4">
-                  <p>Error loading dashboard data: {error}</p>
+                <div className="col-span-full">
+                  <ErrorDisplay
+                    error={error}
+                    onRetry={refetch}
+                    title="Dashboard Data Unavailable"
+                    variant={getErrorVariant(error)}
+                  />
+                </div>
+              ) : !kpiData ? (
+                <div className="col-span-full">
+                  <EmptyState
+                    title="Welcome to Your Dashboard"
+                    message="Your academic data will appear here once it's available."
+                    actionLabel="Refresh Data"
+                    onAction={refetch}
+                  />
                 </div>
               ) : (
                 <>

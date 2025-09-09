@@ -1,32 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { studentService } from "@/services/student.service";
+import { gradesService, StudentKPIData } from "@/services/grades.service";
 
-export interface StudentKPIData {
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  classInfo: {
-    id: string;
-    name: string;
-  };
-  subjectsEnrolled: number;
-  gradeScore: number;
-  attendancePercentage: number;
-  additionalMetrics: {
-    totalAssessments: number;
-    completedAssessments: number;
-    currentTerm: {
-      id: string;
-      name: string;
-    };
-    classRank: number;
-    totalStudentsInClass: number;
-  };
-}
-
-export const useStudentKPIs = (studentId?: string, termId?: string) => {
+export const useStudentGradeKPIs = () => {
   const [kpiData, setKpiData] = useState<StudentKPIData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,20 +10,17 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
   const { user, accessToken } = useAuthContext();
 
   useEffect(() => {
-    const fetchKPIs = async () => {
+    const fetchStudentKPIs = async () => {
       if (!accessToken) {
         setError("No access token available");
         setIsLoading(false);
         return;
       }
 
-      // Use provided studentId or get from user context
-      // Priority: explicit studentId > user.studentId > user.id > user.userId
-      const targetStudentId =
-        studentId || user?.studentId || user?.id || user?.userId;
+      const studentId = user?.studentId;
 
-      if (!targetStudentId) {
-        setError("No student ID available");
+      if (!studentId) {
+        setError("Student ID not available");
         setIsLoading(false);
         return;
       }
@@ -56,18 +29,13 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
         setIsLoading(true);
         setError(null);
 
-        const data = await studentService.getDashboardKPIs(
-          targetStudentId,
-          accessToken,
-          termId
-        );
+        const data = await gradesService.getStudentKPIs(studentId, accessToken);
 
         setKpiData(data);
       } catch (err) {
         console.error("Error fetching student KPIs:", err);
 
-        // Provide more specific error messages
-        let errorMessage = "Failed to fetch student data";
+        let errorMessage = "Failed to fetch academic performance data";
 
         if (err instanceof Error) {
           if (err.message.includes("fetch")) {
@@ -81,7 +49,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
           } else if (err.message.includes("403")) {
             errorMessage = "You don't have permission to access this data.";
           } else if (err.message.includes("404")) {
-            errorMessage = "Student data not found. Please contact support.";
+            errorMessage = "Academic data not found. Please contact support.";
           } else if (err.message.includes("500")) {
             errorMessage = "Server error. Please try again later.";
           } else {
@@ -95,23 +63,23 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
       }
     };
 
-    fetchKPIs();
-  }, [accessToken, studentId, user?.studentId, user?.id, user?.userId, termId]);
+    fetchStudentKPIs();
+  }, [accessToken, user?.studentId]);
 
   const refetch = () => {
-    const targetStudentId =
-      studentId || user?.studentId || user?.id || user?.userId;
-    if (accessToken && targetStudentId) {
-      setIsLoading(true);
-      setError(null); // Clear previous errors
+    const studentId = user?.studentId;
 
-      studentService
-        .getDashboardKPIs(targetStudentId, accessToken, termId)
+    if (accessToken && studentId) {
+      setIsLoading(true);
+      setError(null);
+
+      gradesService
+        .getStudentKPIs(studentId, accessToken)
         .then(setKpiData)
         .catch((err) => {
           console.error("Error refetching student KPIs:", err);
 
-          let errorMessage = "Failed to refresh student data";
+          let errorMessage = "Failed to refresh academic performance data";
 
           if (err instanceof Error) {
             if (err.message.includes("fetch")) {
@@ -125,7 +93,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
             } else if (err.message.includes("403")) {
               errorMessage = "You don't have permission to access this data.";
             } else if (err.message.includes("404")) {
-              errorMessage = "Student data not found. Please contact support.";
+              errorMessage = "Academic data not found. Please contact support.";
             } else if (err.message.includes("500")) {
               errorMessage = "Server error. Please try again later.";
             } else {

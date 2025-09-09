@@ -1,53 +1,30 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { studentService } from "@/services/student.service";
+import { gradesService, CourseGradeRecord } from "@/services/grades.service";
 
-export interface StudentKPIData {
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  classInfo: {
-    id: string;
-    name: string;
-  };
-  subjectsEnrolled: number;
-  gradeScore: number;
-  attendancePercentage: number;
-  additionalMetrics: {
-    totalAssessments: number;
-    completedAssessments: number;
-    currentTerm: {
-      id: string;
-      name: string;
-    };
-    classRank: number;
-    totalStudentsInClass: number;
-  };
-}
-
-export const useStudentKPIs = (studentId?: string, termId?: string) => {
-  const [kpiData, setKpiData] = useState<StudentKPIData | null>(null);
+export const useCourseGradeRecords = () => {
+  const [gradeRecords, setGradeRecords] = useState<CourseGradeRecord[] | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { user, accessToken } = useAuthContext();
 
   useEffect(() => {
-    const fetchKPIs = async () => {
+    const fetchGradeRecords = async () => {
       if (!accessToken) {
         setError("No access token available");
         setIsLoading(false);
         return;
       }
 
-      // Use provided studentId or get from user context
-      // Priority: explicit studentId > user.studentId > user.id > user.userId
-      const targetStudentId =
-        studentId || user?.studentId || user?.id || user?.userId;
+      // Get studentId and termId from user context
+      const studentId = user?.studentId;
+      const termId = user?.termId;
 
-      if (!targetStudentId) {
-        setError("No student ID available");
+      if (!studentId || !termId) {
+        setError("Student ID or Term ID not available");
         setIsLoading(false);
         return;
       }
@@ -56,18 +33,17 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
         setIsLoading(true);
         setError(null);
 
-        const data = await studentService.getDashboardKPIs(
-          targetStudentId,
-          accessToken,
-          termId
+        const data = await gradesService.getCourseGradeRecords(
+          studentId,
+          termId,
+          accessToken
         );
 
-        setKpiData(data);
+        setGradeRecords(data);
       } catch (err) {
-        console.error("Error fetching student KPIs:", err);
+        console.error("Error fetching grade records:", err);
 
-        // Provide more specific error messages
-        let errorMessage = "Failed to fetch student data";
+        let errorMessage = "Failed to fetch grade records";
 
         if (err instanceof Error) {
           if (err.message.includes("fetch")) {
@@ -81,7 +57,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
           } else if (err.message.includes("403")) {
             errorMessage = "You don't have permission to access this data.";
           } else if (err.message.includes("404")) {
-            errorMessage = "Student data not found. Please contact support.";
+            errorMessage = "Grade records not found. Please contact support.";
           } else if (err.message.includes("500")) {
             errorMessage = "Server error. Please try again later.";
           } else {
@@ -95,23 +71,24 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
       }
     };
 
-    fetchKPIs();
-  }, [accessToken, studentId, user?.studentId, user?.id, user?.userId, termId]);
+    fetchGradeRecords();
+  }, [accessToken, user?.studentId, user?.termId]);
 
   const refetch = () => {
-    const targetStudentId =
-      studentId || user?.studentId || user?.id || user?.userId;
-    if (accessToken && targetStudentId) {
+    const studentId = user?.studentId;
+    const termId = user?.termId;
+
+    if (accessToken && studentId && termId) {
       setIsLoading(true);
-      setError(null); // Clear previous errors
+      setError(null);
 
-      studentService
-        .getDashboardKPIs(targetStudentId, accessToken, termId)
-        .then(setKpiData)
+      gradesService
+        .getCourseGradeRecords(studentId, termId, accessToken)
+        .then(setGradeRecords)
         .catch((err) => {
-          console.error("Error refetching student KPIs:", err);
+          console.error("Error refetching grade records:", err);
 
-          let errorMessage = "Failed to refresh student data";
+          let errorMessage = "Failed to refresh grade records";
 
           if (err instanceof Error) {
             if (err.message.includes("fetch")) {
@@ -125,7 +102,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
             } else if (err.message.includes("403")) {
               errorMessage = "You don't have permission to access this data.";
             } else if (err.message.includes("404")) {
-              errorMessage = "Student data not found. Please contact support.";
+              errorMessage = "Grade records not found. Please contact support.";
             } else if (err.message.includes("500")) {
               errorMessage = "Server error. Please try again later.";
             } else {
@@ -140,7 +117,7 @@ export const useStudentKPIs = (studentId?: string, termId?: string) => {
   };
 
   return {
-    kpiData,
+    gradeRecords,
     isLoading,
     error,
     refetch,
