@@ -29,7 +29,6 @@ const menuItems: MenuItem[] = [
     label: "Messages",
     iconPath: "/icons/messages.svg",
     link: "/messages",
-    notification: 5,
   },
 ];
 
@@ -72,7 +71,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
         <div className="mb-4 border-b border-2 border-solid border-[#F1F1F1] -mx-4"></div>
         <div className="flex items-center px-2 py-3 border-2 border-solid border-[#F1F1F1] bg-[#FBFBFB] rounded-md mb-4">
-          <Image src="/unity.png" alt="School" width={40} height={40} />
+          <Image
+            src={user?.schoolLogo}
+            alt={user?.schoolName || "School Logo"}
+            width={40}
+            height={40}
+          />
           <span className="ml-2 font-medium text-base text-gray-700">
             {user?.schoolName || "Unity Secondary S..."}
           </span>

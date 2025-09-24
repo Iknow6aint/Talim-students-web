@@ -18,12 +18,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   // Auto-connect when user is authenticated
   useEffect(() => {
-    // Use either id or userId property based on students app structure
-    const userId = user?.id || user?.userId;
+    // Always prefer user.userId, fallback to user.id only if userId is missing
+    const userId = user?.userId || user?.id;
 
     console.log("🔍 WebSocket auth state changed:", {
       isAuthenticated,
-      userId: userId,
+      userId,
       isConnected: webSocket.isConnected,
       connectionStatus: webSocket.connectionStatus,
     });
@@ -42,11 +42,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [
     isAuthenticated,
-    user?.id,
     user?.userId,
+    user?.id,
     webSocket.isConnected,
     webSocket.connectionStatus,
-  ]); // Fixed dependencies
+  ]);
 
   // Listen for custom auth events separately
   useEffect(() => {

@@ -81,7 +81,7 @@ export default function ChatHeader({
     const participantsText = getParticipantsText();
 
     return (
-        <div className="flex w-full items-center rounded-tr-lg bg-white ">
+        <div className="flex w-full items-center rounded-tr-lg bg-white p-4">
             <div className="flex w-full justify-between items-center gap-3">
                 {/* Avatar & Name / Search Bar */}
                 <div className="flex items-center gap-3 flex-1">

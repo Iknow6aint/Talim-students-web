@@ -39,6 +39,7 @@ export interface StudentDetails {
   phoneNumber: string;
   isActive: boolean;
   isEmailVerified: boolean;
+  userAvatar?: string;
 }
 
 export interface IntrospectResponse {
