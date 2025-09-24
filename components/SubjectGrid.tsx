@@ -1,7 +1,6 @@
-// components/SubjectGrid.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCurriculum } from "@/hooks/useCurriculum";
 import { API_BASE_URL } from "@/lib/constants";
@@ -9,21 +8,23 @@ import { Course } from "@/services/curriculum.service";
 import { BookOpen, Users, Calendar, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoadingCard from "@/components/LoadingCard";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface SubjectCardProps {
   course: Course;
-  onViewCurriculum: (course: Course) => void;
+  onViewCurriculum: (course: Course) => Promise<void>;
+  loading?: boolean;
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({
   course,
   onViewCurriculum,
+  loading = false,
 }) => {
-  const { getSubjectNameByCourse, getTeacherNameByCourse } = useCurriculum();
-
-  const handleViewCurriculum = () => {
-    onViewCurriculum(course);
-  };
+  // Memoize curriculum hook to avoid duplicate requests
+  const curriculum = useCurriculum();
+  const getSubjectNameByCourse = curriculum.getSubjectNameByCourse;
+  const getTeacherNameByCourse = curriculum.getTeacherNameByCourse;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:border-[#003366] group">
@@ -64,17 +65,18 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
         <div className="flex items-center space-x-2">
           <Calendar className="w-4 h-4 text-gray-500" />
           <span className="text-sm text-gray-600">
-            {course.classId?.name || "All Classes"}
+            {(course as any).classId?.name || "All Classes"}
           </span>
         </div>
       </div>
 
       <div className="flex justify-between items-center">
         <Button
-          onClick={handleViewCurriculum}
+          onClick={() => onViewCurriculum(course)}
+          disabled={loading}
           className="bg-[#003366] hover:bg-[#002244] text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg"
         >
-          <span>View Curriculum</span>
+          <span>{loading ? "Loading..." : "View Curriculum"}</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
@@ -82,86 +84,233 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
   );
 };
 
+// Local types for class API response (adjust if your backend differs)
 interface ClassCourse {
   _id: string;
   title: string;
-  description: string;
-  courseCode: string;
-  teacherId: string;
-  subjectId: string;
-  classId: string;
+  description?: string;
+  courseCode?: string;
+  teacherId?: any;
+  subjectId?: any;
+  classId?: any;
 }
 
 interface ClassData {
   _id: string;
   name: string;
-  schoolId: string;
-  classTeacherId: string;
+  schoolId?: string;
+  classTeacherId?: string;
   courses: ClassCourse[];
 }
 
-const SubjectGrid: React.FC<{ classId?: string }> = ({ classId }) => {
+const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
+  classId,
+  termId: propTermId,
+}) => {
   const router = useRouter();
+  const { accessToken, isAuthenticated } = useAuthContext();
+
+  // state
+  const [effectiveClassId, setEffectiveClassId] = useState<string | undefined>(
+    classId
+  );
   const [classData, setClassData] = useState<ClassData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { accessToken, isAuthenticated } =
-    require("@/contexts/AuthContext").useAuthContext();
-  // Get classId from localStorage user object if not provided
-  let effectiveClassId = classId;
-  if (!effectiveClassId) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [fetchingCurriculumFor, setFetchingCurriculumFor] = useState<
+    string | null
+  >(null);
+
+  // derive class id from localStorage if not provided via props
+  useEffect(() => {
+    if (classId) {
+      setEffectiveClassId(classId);
+      return;
+    }
+
     try {
-      const userStr =
-        typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      if (userStr) {
-        const userObj = JSON.parse(userStr);
-        effectiveClassId = userObj.classId;
+      if (typeof window !== "undefined") {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          if (userObj?.classId) setEffectiveClassId(userObj.classId);
+        }
       }
     } catch (e) {
-      // fallback: leave effectiveClassId undefined
+      // ignore parse errors
     }
-  }
+  }, [classId]);
 
+  // fetch class data when dependencies change
   useEffect(() => {
-    const id = effectiveClassId || "507f1f77bcf86cd799439011"; // fallback for demo
     if (!isAuthenticated || !accessToken) {
       setError("User not authenticated");
       setLoading(false);
       return;
     }
-    setLoading(true);
-    fetch(`${API_BASE_URL}/classes/${id}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch class data");
-        return res.json();
-      })
-      .then((data) => {
+
+    if (!effectiveClassId) {
+      setError("No class selected");
+      setClassData(null);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/classes/${effectiveClassId}`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          let msg = res.statusText;
+          try {
+            const body = await res.json();
+            msg = body?.message || JSON.stringify(body) || msg;
+          } catch (e) {}
+          throw new Error(msg || "Failed to fetch class data");
+        }
+
+        const data = await res.json();
         setClassData(data);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err.message);
+      } catch (err: any) {
+        if (err.name === "AbortError") return; // ignore abort
+        setError(err.message || "Failed to load class");
         setClassData(null);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => controller.abort();
   }, [effectiveClassId, accessToken, isAuthenticated]);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const filteredCourses = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    const courses = classData?.courses || [];
+    if (!q) return courses;
+    return courses.filter((course) => {
+      return (
+        (course.title || "").toLowerCase().includes(q) ||
+        (course.courseCode || "").toLowerCase().includes(q)
+      );
+    });
+  }, [classData, searchTerm]);
 
-  const filteredCourses =
-    classData?.courses?.filter((course) => {
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.courseCode.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
-    }) || [];
+  // helper to try and resolve a termId from multiple places
+  const resolveTermId = (): string | null => {
+    // 1. prop
+    if (propTermId) return propTermId;
 
+    // 2. try to read from localStorage.user (most apps store the full user object there)
+    if (typeof window !== "undefined") {
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const parsedUser = JSON.parse(userStr);
+          if (parsedUser?.termId) return parsedUser.termId;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+
+      // 3. try common standalone keys
+      const candidates = ["termId", "currentTermId", "currentTerm", "term"];
+      for (const key of candidates) {
+        try {
+          const v = localStorage.getItem(key);
+          if (!v) continue;
+          // if stored as JSON object like { _id: '...' }
+          try {
+            const parsed = JSON.parse(v);
+            if (parsed && typeof parsed === "object") {
+              if (parsed._id) return parsed._id;
+              if (parsed.id) return parsed.id;
+            }
+          } catch (e) {
+            // not JSON
+            return v;
+          }
+        } catch (e) {
+          // ignore access errors
+        }
+      }
+    }
+
+    // 4. try classData (sometimes apps include activeTerm on class)
+    // @ts-ignore
+    if ((classData as any)?.activeTerm?._id)
+      return (classData as any).activeTerm._id;
+
+    return null;
+  };
+
+  // fetch curriculum for given course and term then navigate to curriculum page
+  const fetchCurriculumAndNavigate = async (course: Course) => {
+    const courseId = course._id;
+    const termId = resolveTermId();
+
+    if (!termId) {
+      setError(
+        "No termId available. Please provide a termId prop to SubjectGrid or set 'termId'/'currentTermId' in localStorage."
+      );
+      return;
+    }
+
+    setFetchingCurriculumFor(courseId);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/curriculum/by-course-term`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ courseId, termId }),
+      });
+
+      if (!res.ok) {
+        let msg = res.statusText;
+        try {
+          const body = await res.json();
+          msg = body?.message || JSON.stringify(body) || msg;
+        } catch (e) {}
+        throw new Error(msg || "Failed to fetch curriculum");
+      }
+
+      const data = await res.json();
+
+      // store the payload in sessionStorage so the curriculum page can read it
+      try {
+        const storageKey = `curriculum_${courseId}_${termId}`;
+        sessionStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        // ignore storage errors
+      }
+
+      // navigate to curriculum page with query params (page should read sessionStorage key)
+      router.push(`/subjects/curriculum?courseId=${courseId}&termId=${termId}`);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch curriculum");
+    } finally {
+      setFetchingCurriculumFor(null);
+    }
+  };
+
+  // render states
   if (loading) {
     return (
       <div className="px-6 py-4 h-full">
@@ -216,13 +365,14 @@ const SubjectGrid: React.FC<{ classId?: string }> = ({ classId }) => {
   return (
     <div className="px-6 py-4 h-full">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2 text-[#030E18]">
-          {classData?.name || "Class"}
+        <h2 className="text-2xl font-medium mb-2 text-[#030E18]">
+          Subjects
         </h2>
         <p className="text-gray-600">
           Explore your course curriculum and materials
         </p>
       </div>
+
       {/* Search */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -236,6 +386,7 @@ const SubjectGrid: React.FC<{ classId?: string }> = ({ classId }) => {
           />
         </div>
       </div>
+
       {/* Results count */}
       <div className="mb-4">
         <p className="text-sm text-gray-600">
@@ -243,39 +394,43 @@ const SubjectGrid: React.FC<{ classId?: string }> = ({ classId }) => {
           courses
         </p>
       </div>
+
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
-          <SubjectCard
-            key={course._id}
-            course={{
-              ...course,
-              createdAt: "",
-              updatedAt: "",
-              subjectId:
-                typeof course.subjectId === "string"
-                  ? { _id: course.subjectId, name: "", code: "" }
-                  : course.subjectId,
-              teacherId:
-                typeof course.teacherId === "string"
-                  ? {
-                      _id: course.teacherId,
-                      firstName: "",
-                      lastName: "",
-                      email: "",
-                    }
-                  : course.teacherId,
-              classId:
-                typeof course.classId === "string"
-                  ? { _id: course.classId, name: "", level: "" }
-                  : course.classId,
-            }}
-            onViewCurriculum={() =>
-              router.push(`/subjects/curriculum?courseId=${course._id}`)
-            }
-          />
-        ))}
+        {filteredCourses.map((course) => {
+          // normalize nested id fields if backend returns plain ids
+          const normalizedCourse: Course = {
+            ...(course as any),
+            subjectId:
+              typeof (course as any).subjectId === "string"
+                ? { _id: (course as any).subjectId, name: "", code: "" }
+                : (course as any).subjectId,
+            teacherId:
+              typeof (course as any).teacherId === "string"
+                ? {
+                    _id: (course as any).teacherId,
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                  }
+                : (course as any).teacherId,
+            classId:
+              typeof (course as any).classId === "string"
+                ? { _id: (course as any).classId, name: "", level: "" }
+                : (course as any).classId,
+          } as Course;
+
+          return (
+            <SubjectCard
+              key={course._id}
+              course={normalizedCourse}
+              loading={fetchingCurriculumFor === course._id}
+              onViewCurriculum={fetchCurriculumAndNavigate}
+            />
+          );
+        })}
       </div>
+
       {filteredCourses.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">

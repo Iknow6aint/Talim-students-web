@@ -4,9 +4,8 @@ import { toast } from "react-hot-toast";
 
 // WebSocket connection configuration
 const WEBSOCKET_URL =
-  process.env.NEXT_PUBLIC_WEBSOCKET_URL ||
-  // "http://localhost:5005";
-  "https://talim-be-dev.onrender.com";
+  process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:5005";
+// "https://talim-be-dev.onrender.com";
 
 // Event types that match the backend gateway
 export interface ChatMessage {
@@ -108,7 +107,7 @@ export interface WebSocketContextType {
     message: Omit<ChatMessage, "_id" | "senderId" | "timestamp" | "readBy">
   ) => void;
   markMessageAsRead: (messageId: string) => void;
-  fetchChatRooms: () => void;
+  fetchChatRooms: (userId?: string) => void;
   fetchMessages: (data: {
     roomId: string;
     cursor?: string;
@@ -174,6 +173,8 @@ export const useWebSocket = (): WebSocketContextType => {
   // Connect to WebSocket
   const connect = useCallback(
     (userId: string) => {
+      console.log("loginUserId", userId);
+
       // Prevent multiple connections
       if (socketRef.current?.connected) {
         console.log("🔌 Already connected to WebSocket");
@@ -339,7 +340,12 @@ export const useWebSocket = (): WebSocketContextType => {
   // Chat functions
   const joinChatRoom = useCallback((roomId: string) => {
     if (socketRef.current?.connected) {
-      socketRef.current.emit("join-chat-room", { roomId });
+      const id = userIdRef.current;
+      if (!id) {
+        toast.error("User ID required to join chat room");
+        return;
+      }
+      socketRef.current.emit("join-chat-room", { roomId, userId: id });
       console.log(`📨 Joined chat room: ${roomId}`);
     } else {
       toast.error("Not connected to chat service");
@@ -373,10 +379,15 @@ export const useWebSocket = (): WebSocketContextType => {
     }
   }, []);
 
-  const fetchChatRooms = useCallback(() => {
+  const fetchChatRooms = useCallback((userId?: string) => {
     if (socketRef.current?.connected) {
-      socketRef.current.emit("fetch-chat-rooms");
-      console.log("📨 Fetching chat rooms");
+      const id = userId || userIdRef.current;
+      if (!id) {
+        toast.error("User ID required to fetch chat rooms");
+        return;
+      }
+      socketRef.current.emit("fetch-chat-rooms", { userId: id });
+      console.log("📨 Fetching chat rooms for user:", id);
     } else {
       toast.error("Not connected to chat service");
     }

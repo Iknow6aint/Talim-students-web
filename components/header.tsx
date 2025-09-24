@@ -51,7 +51,10 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
             </Link>
             <Link href="/profile">
               <Avatar>
-                <AvatarImage src="/placeholder.svg" alt="User avatar" />
+                <AvatarImage
+                  src={user?.userAvatar || "/placeholder.svg"}
+                  alt="User avatar"
+                />
                 <AvatarFallback className="bg-green-300">
                   {getInitials()}
                 </AvatarFallback>
