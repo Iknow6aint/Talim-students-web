@@ -27,14 +27,14 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
   const getTeacherNameByCourse = curriculum.getTeacherNameByCourse;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:border-[#003366] group">
+    <div className="bg-white rounded-2xl border border-gray-200 p-6  transition-all duration-300 hover:border-[#003366] group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#003366] to-[#004080] rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-[#003366] to-[#004080] rounded-xl flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-[#003366] transition-colors">
+            <h3 className="font-medium text-gray-900 text-lg group-hover:text-[#003366] transition-colors">
               {course.title}
             </h3>
             <p className="text-sm text-gray-600 font-medium">
@@ -55,26 +55,13 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <Users className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">
-            {getTeacherNameByCourse(course)}
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">
-            {(course as any).classId?.name || "All Classes"}
-          </span>
-        </div>
-      </div>
+      
 
       <div className="flex justify-between items-center">
         <Button
           onClick={() => onViewCurriculum(course)}
           disabled={loading}
-          className="bg-[#003366] hover:bg-[#002244] text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg"
+          className="bg-transparent border border-[#002244] text-black px-4 py-2 rounded-lg flex items-center space-x-2 transition-all duration-200 "
         >
           <span>{loading ? "Loading..." : "View Curriculum"}</span>
           <ArrowRight className="w-4 h-4" />
@@ -365,9 +352,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
   return (
     <div className="px-6 py-4 h-full">
       <div className="mb-6">
-        <h2 className="text-2xl font-medium mb-2 text-[#030E18]">
-          Subjects
-        </h2>
+        <h2 className="text-2xl font-medium mb-2 text-[#030E18]">Subjects</h2>
         <p className="text-gray-600">
           Explore your course curriculum and materials
         </p>
@@ -396,7 +381,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredCourses.map((course) => {
           // normalize nested id fields if backend returns plain ids
           const normalizedCourse: Course = {
