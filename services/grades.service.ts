@@ -1,11 +1,11 @@
 import { API_BASE_URL } from "@/lib/constants";
 
 export interface CourseGradeRecord {
-  courseId: string;
-  courseName: string;
-  courseCode: string;
-  creditHours: number;
-  assessments: Array<{
+  courseId: string | null;
+  courseName?: string;
+  courseCode?: string;
+  creditHours?: number;
+  assessments?: Array<{
     assessmentId: string;
     assessmentName: string;
     assessmentType: string;
@@ -15,10 +15,15 @@ export interface CourseGradeRecord {
     gradeDate?: string;
     feedback?: string;
   }>;
-  courseAverage: number;
-  letterGrade: string;
-  gradePoints: number;
-  status: "completed" | "in_progress" | "not_started";
+  courseAverage?: number;
+  letterGrade?: string;
+  gradePoints?: number;
+  status?: "completed" | "in_progress" | "not_started";
+  // Added fields from new API response
+  percentage?: number;
+  cumulativeScore?: number;
+  gradeLevel?: string;
+  maxScore?: number;
 }
 
 export interface StudentKPIData {
