@@ -132,7 +132,7 @@ export default function ResultsDashboard() {
         <div className="space-y-6">
           {/* Performance Overview Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* GPA Card */}
+            {/* Percentage Card */}
             <Card className="overflow-hidden border border-[#F0F0F0] shadow-none">
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-2 flex mb-6 justify-start items-center gap-2 flex-row">
@@ -141,9 +141,11 @@ export default function ResultsDashboard() {
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-medium text-[#030E18]">
-                      {kpiData.gradeScore}%
+                      {gradeRecords && gradeRecords[0]?.percentage
+                        ? `${gradeRecords[0].percentage.toFixed(1)}%`
+                        : "N/A%"}
                     </div>
-                    <p className="text-sm text-[#6F6F6F]">Grade Score</p>
+                    <p className="text-sm text-[#6F6F6F]">Overall Percentage</p>
                   </div>
                 </div>
                 <div className="h-px -mx-6 bg-gray-200" />
@@ -153,65 +155,74 @@ export default function ResultsDashboard() {
               </CardContent>
             </Card>
 
-            {/* Completed Assessments Card */}
+            {/* Cumulative Score Card */}
             <Card className="overflow-hidden border border-[#F0F0F0] shadow-none">
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-2 flex mb-6 justify-start items-center gap-2 flex-row">
                   <div className="flex justify-center items-center text-blue-600">
-                    <FileText className="h-[52px] w-[52px]" />
+                    <TrendingUp className="h-[52px] w-[52px]" />
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-medium text-[#030E18]">
-                      {kpiData.completedAssessments}
+                      {gradeRecords && gradeRecords[0]?.cumulativeScore
+                        ? gradeRecords[0].cumulativeScore
+                        : "N/A"}{" "}
+                      <span className="text-[#6F6F6F] text-[18px]">
+                        / {gradeRecords && gradeRecords[0]?.maxScore}
+                      </span>
                     </div>
-                    <p className="text-sm text-[#6F6F6F]">
-                      Completed Assessments
-                    </p>
-                  </div>
-                </div>
-                <div className="h-px -mx-6 bg-gray-200" />
-                <div className="mt-4 text-sm text-[#606060]">This term</div>
-              </CardContent>
-            </Card>
-
-            {/* Class Position Card */}
-            <Card className="overflow-hidden border border-[#F0F0F0] shadow-none">
-              <CardContent className="pt-6 pb-4">
-                <div className="space-y-2 flex mb-6 justify-start items-center gap-2 flex-row">
-                  <div className="flex justify-center items-center text-blue-600">
-                    <Users className="h-[52px] w-[52px]" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-2xl font-medium text-[#030E18]">
-                      {kpiData.classPosition}
-                    </div>
-                    <p className="text-sm text-[#6F6F6F]">Class Position</p>
+                    <p className="text-sm text-[#6F6F6F]">Cumulative Score</p>
                   </div>
                 </div>
                 <div className="h-px -mx-6 bg-gray-200" />
                 <div className="mt-4 text-sm text-[#606060]">
-                  Out of {kpiData.totalStudentsInClass} students
+                  Total score this term
                 </div>
               </CardContent>
             </Card>
 
-            {/* Subjects Card */}
+            {/* Grade Level Card */}
             <Card className="overflow-hidden border border-[#F0F0F0] shadow-none">
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-2 flex mb-6 justify-start items-center gap-2 flex-row">
                   <div className="flex justify-center items-center text-blue-600">
-                    <BookOpen className="h-[52px] w-[52px]" />
+                    <Award className="h-[52px] w-[52px]" />
                   </div>
                   <div className="space-y-1">
                     <div className="text-2xl font-medium text-[#030E18]">
-                      {kpiData.subjectsEnrolled}
+                      {gradeRecords && gradeRecords[0]?.gradeLevel
+                        ? gradeRecords[0].gradeLevel
+                        : "N/A"}
                     </div>
-                    <p className="text-sm text-[#6F6F6F]">Enrolled Subjects</p>
+                    <p className="text-sm text-[#6F6F6F]">Grade Level</p>
                   </div>
                 </div>
                 <div className="h-px -mx-6 bg-gray-200" />
                 <div className="mt-4 text-sm text-[#606060]">
-                  Active this term
+                  Current grade level
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Max Score Card */}
+            <Card className="overflow-hidden border border-[#F0F0F0] shadow-none">
+              <CardContent className="pt-6 pb-4">
+                <div className="space-y-2 flex mb-6 justify-start items-center gap-2 flex-row">
+                  <div className="flex justify-center items-center text-blue-600">
+                    <TrendingUp className="h-[52px] w-[52px]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-medium text-[#030E18]">
+                      {gradeRecords && gradeRecords[0]?.maxScore
+                        ? gradeRecords[0].maxScore
+                        : "N/A"}
+                    </div>
+                    <p className="text-sm text-[#6F6F6F]">Max Score</p>
+                  </div>
+                </div>
+                <div className="h-px -mx-6 bg-gray-200" />
+                <div className="mt-4 text-sm text-[#606060]">
+                  Maximum possible score
                 </div>
               </CardContent>
             </Card>
@@ -258,7 +269,10 @@ export default function ResultsDashboard() {
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-semibold text-[#030E18]">
-                            {record.courseAverage.toFixed(1)}%
+                            {typeof record.courseAverage === "number" &&
+                            !isNaN(record.courseAverage)
+                              ? `${record.courseAverage.toFixed(1)}%`
+                              : "N/A%"}
                           </div>
                           <div className="text-sm text-[#6F6F6F]">
                             {record.letterGrade}
