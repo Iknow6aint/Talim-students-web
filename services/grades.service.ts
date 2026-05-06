@@ -2,7 +2,9 @@ import { API_BASE_URL } from "@/lib/constants";
 
 export interface AssessmentGradeRecord {
   _id?: string;
-  assessmentId: string | { _id: string; title?: string; name?: string; type?: string };
+  assessmentId:
+    | string
+    | { _id: string; title?: string; name?: string; type?: string };
   actualScore?: number;
   score?: number;
   maxScore: number;
@@ -20,15 +22,12 @@ export interface CourseGradeRecord {
     | null
     | { _id: string; name?: string; code?: string; creditHours?: number };
   studentId?: string | object;
-  termId?: string | object;
-  // Flattened fields (legacy / API may return flat or nested)
+  termId?: string | { _id: string; name?: string };
+  assessmentGradeRecords?: AssessmentGradeRecord[];
+  assessments?: AssessmentGradeRecord[];
   courseName?: string;
   courseCode?: string;
   creditHours?: number;
-  // New-shape assessment records
-  assessmentGradeRecords?: AssessmentGradeRecord[];
-  // Legacy assessment shape
-  assessments?: AssessmentGradeRecord[];
   courseAverage?: number;
   letterGrade?: string;
   gradePoints?: number;
@@ -40,89 +39,90 @@ export interface CourseGradeRecord {
   isActive?: boolean;
 }
 
-export interface StudentKPIData {
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  classInfo: {
-    id: string;
-    name: string;
-  };
-  subjectsEnrolled: number;
-  gradeScore: number;
-  attendanceRate: number;
-  currentTerm: {
-    id: string;
-    name: string;
-  };
-  gradeLevel: string;
-  completedAssessments: number;
-  classPosition: number;
-  totalStudentsInClass: number;
+export interface StudentCumulativeGrade {
+  _id: string;
+  termId: { _id: string; name: string } | string;
+  totalScore: number;
+  percentage: number;
+  grade: string;
+  position: number;
+  remarks?: string;
+  isActive: boolean;
 }
 
 function extractArray<T>(json: unknown): T[] {
   if (Array.isArray(json)) return json as T[];
   if (json && typeof json === "object") {
-    const paginated = json as { data?: T[] };
-    if (Array.isArray(paginated.data)) return paginated.data;
+    const p = json as { data?: T[] };
+    if (Array.isArray(p.data)) return p.data;
   }
   return [];
 }
 
+async function apiFetch<T>(url: string, accessToken: string): Promise<T> {
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ?? `HTTP ${res.status}`
+    );
+  }
+
+  return res.json();
+}
+
 export const gradesService = {
-  getCourseGradeRecords: async (
-    studentId: string,
+  /** All course grade records for the authenticated student in a given term */
+  getCourseGradesByTerm: async (
     termId: string,
     accessToken: string
   ): Promise<CourseGradeRecord[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}/grade-records/course-grade-records/student/${studentId}/term/${termId}`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
+    const json = await apiFetch(
+      `${API_BASE_URL}/grade-records/student/me/course-grades/term/${termId}`,
+      accessToken
     );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        (errorData as { message?: string }).message ||
-          `HTTP error! status: ${response.status}`
-      );
-    }
-
-    const json = await response.json();
     return extractArray<CourseGradeRecord>(json);
   },
 
-  getStudentKPIs: async (
-    studentId: string,
+  /** Cumulative grade record for the authenticated student for a given term */
+  getCumulativeGradeByTerm: async (
+    termId: string,
     accessToken: string
-  ): Promise<StudentKPIData> => {
-    const response = await fetch(
-      `${API_BASE_URL}/students/${studentId}/dashboard/kpis`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
+  ): Promise<StudentCumulativeGrade | null> => {
+    const json = await apiFetch<StudentCumulativeGrade | null>(
+      `${API_BASE_URL}/grade-records/student/me/cumulative-grades/${termId}`,
+      accessToken
     );
+    return json;
+  },
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        (errorData as { message?: string }).message ||
-          `HTTP error! status: ${response.status}`
-      );
-    }
+  /** All cumulative term grade records for the authenticated student */
+  getAllCumulativeGrades: async (
+    accessToken: string
+  ): Promise<StudentCumulativeGrade[]> => {
+    const json = await apiFetch(
+      `${API_BASE_URL}/grade-records/student/me/cumulative-grades`,
+      accessToken
+    );
+    return extractArray<StudentCumulativeGrade>(json);
+  },
 
-    return response.json();
+  /** Assessment grade records for the authenticated student on one assessment */
+  getAssessmentGrades: async (
+    assessmentId: string,
+    accessToken: string
+  ): Promise<AssessmentGradeRecord[]> => {
+    const json = await apiFetch(
+      `${API_BASE_URL}/grade-records/student/me/assessments/${assessmentId}`,
+      accessToken
+    );
+    return extractArray<AssessmentGradeRecord>(json);
   },
 };

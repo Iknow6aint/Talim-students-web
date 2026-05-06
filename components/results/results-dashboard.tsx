@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { useCourseGradeRecords } from "@/hooks/useCourseGradeRecords";
-import { useStudentGradeKPIs } from "@/hooks/useStudentGradeKPIs";
+import { useStudentCumulativeGrade } from "@/hooks/useStudentCumulativeGrade";
 import { Card, CardContent } from "@/components/ui/card";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { EmptyState } from "@/components/EmptyState";
-import type { CourseGradeRecord, AssessmentGradeRecord } from "@/services/grades.service";
+import type {
+  CourseGradeRecord,
+  AssessmentGradeRecord,
+  StudentCumulativeGrade,
+} from "@/services/grades.service";
 import {
   BookOpen,
   FileText,
@@ -16,7 +20,6 @@ import {
   Trophy,
   CheckCircle2,
   BarChart3,
-  Users,
 } from "lucide-react";
 
 // ─── helpers ───────────────────────────────────────────────────────────────
@@ -40,51 +43,76 @@ function progressColor(pct: number) {
   return "bg-red-500";
 }
 
+function pctToGrade(pct: number) {
+  if (pct >= 90) return "A+";
+  if (pct >= 80) return "A";
+  if (pct >= 75) return "B+";
+  if (pct >= 70) return "B";
+  if (pct >= 65) return "C+";
+  if (pct >= 60) return "C";
+  if (pct >= 55) return "D+";
+  if (pct >= 50) return "D";
+  if (pct >= 45) return "E";
+  return "F";
+}
+
 function getErrorVariant(msg: string): "network" | "auth" | "server" | "default" {
   const m = msg.toLowerCase();
-  if (m.includes("network") || m.includes("fetch") || m.includes("connection")) return "network";
-  if (m.includes("unauthorized") || m.includes("token") || m.includes("authentication")) return "auth";
+  if (m.includes("network") || m.includes("fetch") || m.includes("connection"))
+    return "network";
+  if (m.includes("unauthorized") || m.includes("token") || m.includes("session"))
+    return "auth";
   if (m.includes("500") || m.includes("server")) return "server";
   return "default";
 }
 
-/** Resolve course name from either the flat or the populated-object shape */
+function termName(cumulative: StudentCumulativeGrade | null): string {
+  if (!cumulative) return "";
+  if (typeof cumulative.termId === "object") return cumulative.termId.name;
+  return "";
+}
+
+/** Resolve course display fields from either the flat or populated-object API shape */
 function resolveCourse(r: CourseGradeRecord) {
   if (r.courseId && typeof r.courseId === "object") {
     return {
       name: r.courseId.name ?? r.courseName ?? "Unnamed Course",
       code: r.courseId.code ?? r.courseCode,
       credits: r.courseId.creditHours ?? r.creditHours,
-      key: r.courseId._id ?? r._id ?? Math.random().toString(),
+      key: r.courseId._id ?? r._id ?? String(Math.random()),
     };
   }
   return {
     name: r.courseName ?? "Unnamed Course",
     code: r.courseCode,
     credits: r.creditHours,
-    key: (r.courseId as string) ?? r._id ?? Math.random().toString(),
+    key: (r.courseId as string) ?? r._id ?? String(Math.random()),
   };
 }
 
-/** Normalize assessments from either shape */
 function resolveAssessments(r: CourseGradeRecord): AssessmentGradeRecord[] {
-  return (r.assessmentGradeRecords ?? r.assessments ?? []);
+  return r.assessmentGradeRecords ?? r.assessments ?? [];
 }
 
-function assessmentLabel(a: AssessmentGradeRecord, index: number): string {
+function assessmentLabel(a: AssessmentGradeRecord, i: number): string {
   if (a.assessmentName) return a.assessmentName;
-  if (a.assessmentId && typeof a.assessmentId === "object") {
-    return a.assessmentId.title ?? a.assessmentId.name ?? `Assessment ${index + 1}`;
-  }
-  return `Assessment ${index + 1}`;
+  if (a.assessmentId && typeof a.assessmentId === "object")
+    return a.assessmentId.title ?? a.assessmentId.name ?? `Assessment ${i + 1}`;
+  return `Assessment ${i + 1}`;
 }
 
 function assessmentType(a: AssessmentGradeRecord): string | null {
   if (a.assessmentType) return a.assessmentType;
-  if (a.assessmentId && typeof a.assessmentId === "object") {
+  if (a.assessmentId && typeof a.assessmentId === "object")
     return a.assessmentId.type ?? null;
-  }
   return null;
+}
+
+function totalAssessments(records: CourseGradeRecord[]): number {
+  return records.reduce(
+    (sum, r) => sum + resolveAssessments(r).length,
+    0
+  );
 }
 
 // ─── sub-components ────────────────────────────────────────────────────────
@@ -156,33 +184,35 @@ function CourseCard({
 
   return (
     <div className="bg-white rounded-2xl border border-[#F0F0F0] overflow-hidden transition-shadow hover:shadow-sm">
-      {/* Header row — always visible */}
+      {/* Always-visible header */}
       <button
         className="w-full text-left p-5 focus:outline-none"
         onClick={onToggle}
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-3">
-          {/* Icon */}
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#003366]/10 flex items-center justify-center">
             <FileText className="w-5 h-5 text-[#003366]" />
           </div>
 
-          {/* Course info */}
           <div className="flex-1 min-w-0 text-left">
             <div className="font-semibold text-[#030E18] truncate">{name}</div>
             <div className="text-xs text-[#AAAAAA] mt-0.5 flex flex-wrap gap-x-2">
               {code && <span>{code}</span>}
-              {credits != null && <span>{credits} credit{credits !== 1 ? "s" : ""}</span>}
+              {credits != null && (
+                <span>
+                  {credits} credit{credits !== 1 ? "s" : ""}
+                </span>
+              )}
               {assessments.length > 0 && (
                 <span className="text-[#003366] font-medium">
-                  {assessments.length} assessment{assessments.length !== 1 ? "s" : ""}
+                  {assessments.length} assessment
+                  {assessments.length !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Score + grade + chevron */}
           <div className="flex items-center gap-2.5 flex-shrink-0">
             <div className="text-right hidden sm:block">
               <div className="text-base font-bold text-[#030E18]">
@@ -215,10 +245,12 @@ function CourseCard({
 
         {/* Progress bar */}
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#AAAAAA]">Score</span>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs text-[#AAAAAA]">Performance</span>
             <span className="text-xs font-medium text-[#030E18] sm:hidden">
-              {typeof pct === "number" && !isNaN(pct) ? `${pct.toFixed(1)}%` : "N/A"}
+              {typeof pct === "number" && !isNaN(pct)
+                ? `${pct.toFixed(1)}%`
+                : "N/A"}
             </span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -246,12 +278,19 @@ function CourseCard({
                 {assessments.map((a, i) => {
                   const score = a.actualScore ?? a.score ?? null;
                   const max = a.maxScore ?? null;
-                  const aPct = score != null && max ? (score / max) * 100 : null;
+                  const aPct =
+                    score != null && max ? (score / max) * 100 : null;
                   const type = assessmentType(a);
+                  const aId =
+                    a._id ??
+                    (typeof a.assessmentId === "string"
+                      ? a.assessmentId
+                      : a.assessmentId?._id) ??
+                    i;
 
                   return (
                     <div
-                      key={a._id ?? (typeof a.assessmentId === "string" ? a.assessmentId : a.assessmentId?._id) ?? i}
+                      key={aId}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
                     >
                       <div className="flex-1 min-w-0">
@@ -259,32 +298,16 @@ function CourseCard({
                           {assessmentLabel(a, i)}
                         </div>
                         {type && (
-                          <div className="text-xs text-[#AAAAAA] capitalize">{type}</div>
+                          <div className="text-xs text-[#AAAAAA] capitalize">
+                            {type}
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {aPct != null && (
                           <span
                             className={`text-xs font-medium px-2 py-0.5 rounded-md ${gradeBadgeClass(
-                              aPct >= 90
-                                ? "A+"
-                                : aPct >= 80
-                                ? "A"
-                                : aPct >= 75
-                                ? "B+"
-                                : aPct >= 70
-                                ? "B"
-                                : aPct >= 65
-                                ? "C+"
-                                : aPct >= 60
-                                ? "C"
-                                : aPct >= 55
-                                ? "D+"
-                                : aPct >= 50
-                                ? "D"
-                                : aPct >= 45
-                                ? "E"
-                                : "F"
+                              pctToGrade(aPct)
                             )}`}
                           >
                             {aPct.toFixed(0)}%
@@ -292,7 +315,11 @@ function CourseCard({
                         )}
                         <div className="text-sm font-semibold text-[#030E18] tabular-nums">
                           {score != null ? score : "—"}
-                          {max != null ? <span className="text-[#AAAAAA] font-normal">/{max}</span> : ""}
+                          {max != null ? (
+                            <span className="text-[#AAAAAA] font-normal">
+                              /{max}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -316,7 +343,6 @@ function Skeleton({ className }: { className?: string }) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (
           <Card key={i} className="border border-[#F0F0F0] shadow-none rounded-2xl">
@@ -328,7 +354,6 @@ function LoadingSkeleton() {
           </Card>
         ))}
       </div>
-      {/* Content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-3">
           {[0, 1, 2].map((i) => (
@@ -348,15 +373,13 @@ function LoadingSkeleton() {
             </div>
           ))}
         </div>
-        <div className="space-y-3">
-          <div className="animate-pulse bg-white rounded-2xl border border-[#F0F0F0] p-5 space-y-4 h-64" />
-        </div>
+        <div className="animate-pulse bg-white rounded-2xl border border-[#F0F0F0] h-72" />
       </div>
     </div>
   );
 }
 
-// ─── main component ─────────────────────────────────────────────────────────
+// ─── grade scale ────────────────────────────────────────────────────────────
 
 const GRADE_SCALE = [
   { grade: "A+", range: "≥ 90%", cls: "bg-emerald-100 text-emerald-700" },
@@ -371,6 +394,8 @@ const GRADE_SCALE = [
   { grade: "F", range: "< 45%", cls: "bg-red-200 text-red-800" },
 ];
 
+// ─── main ───────────────────────────────────────────────────────────────────
+
 export default function ResultsDashboard() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -383,19 +408,20 @@ export default function ResultsDashboard() {
   } = useCourseGradeRecords();
 
   const {
-    kpiData,
-    isLoading: kpiLoading,
-    error: kpiError,
-    refetch: refetchKPIs,
-  } = useStudentGradeKPIs();
+    cumulativeGrade,
+    isLoading: cumulativeLoading,
+    error: cumulativeError,
+    refetch: refetchCumulative,
+  } = useStudentCumulativeGrade();
 
-  const isLoading = recordsLoading || kpiLoading;
-  const error = recordsError || kpiError;
+  const isLoading = recordsLoading || cumulativeLoading;
+  // Only surface cumulative error if course records also failed (cumulative may simply not exist yet)
+  const error = recordsError || (cumulativeError && !gradeRecords ? cumulativeError : null);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     refetchRecords();
-    refetchKPIs();
+    refetchCumulative();
     setTimeout(() => setIsRefreshing(false), 1200);
   };
 
@@ -406,19 +432,19 @@ export default function ResultsDashboard() {
       return next;
     });
 
-  const hasData = kpiData || (gradeRecords && gradeRecords.length > 0);
+  const hasData = (gradeRecords && gradeRecords.length > 0) || cumulativeGrade;
+  const subjectCount = gradeRecords?.length ?? 0;
+  const assessmentCount = gradeRecords ? totalAssessments(gradeRecords) : 0;
+  const term = termName(cumulativeGrade);
 
   return (
     <div className="min-h-full p-5 sm:p-6 bg-[#F8F8F8] space-y-6">
-      {/* ── Page header ── */}
+      {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#030E18]">Results</h1>
           <p className="text-sm text-[#AAAAAA] mt-0.5">
-            {kpiData?.currentTerm?.name
-              ? `${kpiData.currentTerm.name} · `
-              : ""}
-            Academic performance overview
+            {term ? `${term} · ` : ""}Academic performance overview
           </p>
         </div>
         <button
@@ -426,9 +452,7 @@ export default function ResultsDashboard() {
           disabled={isLoading || isRefreshing}
           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#003366] bg-white border border-[#F0F0F0] rounded-xl hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50 flex-shrink-0"
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
           <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
@@ -462,7 +486,9 @@ export default function ResultsDashboard() {
             <StatCard
               icon={<BarChart3 className="w-5 h-5" />}
               value={
-                kpiData?.gradeScore != null ? `${kpiData.gradeScore}%` : "—"
+                cumulativeGrade?.percentage != null
+                  ? `${cumulativeGrade.percentage.toFixed(1)}%`
+                  : "—"
               }
               label="Grade Score"
               sub="This term"
@@ -470,45 +496,38 @@ export default function ResultsDashboard() {
             <StatCard
               icon={<Trophy className="w-5 h-5" />}
               value={
-                kpiData?.classPosition != null
-                  ? `#${kpiData.classPosition}`
+                cumulativeGrade?.position != null
+                  ? `#${cumulativeGrade.position}`
                   : "—"
               }
               label="Class Position"
-              sub={
-                kpiData?.totalStudentsInClass
-                  ? `of ${kpiData.totalStudentsInClass} students`
-                  : undefined
-              }
+              sub="This term"
             />
             <StatCard
               icon={<BookOpen className="w-5 h-5" />}
-              value={
-                kpiData?.subjectsEnrolled ?? gradeRecords?.length ?? "—"
-              }
+              value={subjectCount || "—"}
               label="Subjects"
               sub="Enrolled"
             />
             <StatCard
               icon={<CheckCircle2 className="w-5 h-5" />}
-              value={kpiData?.completedAssessments ?? "—"}
+              value={assessmentCount || "—"}
               label="Assessments"
-              sub="Completed"
+              sub="Recorded"
             />
           </div>
 
           {/* ── Main content ── */}
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Subject performance (left, wider) */}
+            {/* Left: subject list */}
             <div className="lg:col-span-2 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold text-[#030E18]">
                   Subject Performance
                 </h2>
-                {gradeRecords && gradeRecords.length > 0 && (
+                {subjectCount > 0 && (
                   <span className="text-xs text-[#AAAAAA]">
-                    {gradeRecords.length} subject
-                    {gradeRecords.length !== 1 ? "s" : ""}
+                    {subjectCount} subject{subjectCount !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>
@@ -540,68 +559,61 @@ export default function ResultsDashboard() {
               )}
             </div>
 
-            {/* Right sidebar */}
+            {/* Right: summary + grade scale */}
             <div className="space-y-4">
-              {/* Academic summary */}
               <h2 className="text-base font-semibold text-[#030E18]">
                 Academic Summary
               </h2>
 
               <Card className="border border-[#F0F0F0] shadow-none rounded-2xl">
                 <CardContent className="p-5 space-y-4">
-                  {kpiData ? (
+                  {cumulativeGrade ? (
                     <>
-                      {/* Overall grade hero */}
+                      {/* Grade hero */}
                       <div className="flex items-center justify-between p-4 bg-[#003366]/5 rounded-xl">
                         <div>
                           <div className="text-xs text-[#AAAAAA] font-medium uppercase tracking-wider">
                             Overall Grade
                           </div>
                           <div className="text-sm font-medium text-[#030E18] mt-0.5">
-                            {kpiData.gradeScore}% score
+                            {cumulativeGrade.percentage.toFixed(1)}% score
                           </div>
                         </div>
                         <div
                           className={`text-2xl font-bold px-4 py-2 rounded-xl ${gradeBadgeClass(
-                            kpiData.gradeLevel
+                            cumulativeGrade.grade
                           )}`}
                         >
-                          {kpiData.gradeLevel || "—"}
+                          {cumulativeGrade.grade || "—"}
                         </div>
                       </div>
 
                       {/* Info rows */}
                       <div>
+                        {term && <SummaryRow label="Term" value={term} />}
                         <SummaryRow
-                          label="Current Term"
-                          value={kpiData.currentTerm?.name || "—"}
-                        />
-                        <SummaryRow
-                          label="Class"
-                          value={kpiData.classInfo?.name || "—"}
+                          label="Total Score"
+                          value={String(cumulativeGrade.totalScore)}
                         />
                         <SummaryRow
                           label="Class Rank"
                           value={
-                            kpiData.classPosition != null
-                              ? `#${kpiData.classPosition}`
+                            cumulativeGrade.position != null
+                              ? `#${cumulativeGrade.position}`
                               : "—"
                           }
-                          sub={
-                            kpiData.totalStudentsInClass
-                              ? `of ${kpiData.totalStudentsInClass} students`
-                              : undefined
-                          }
                         />
-                        <SummaryRow
-                          label="Assessments Done"
-                          value={String(kpiData.completedAssessments ?? "—")}
-                        />
+                        {cumulativeGrade.remarks && (
+                          <SummaryRow
+                            label="Remarks"
+                            value={cumulativeGrade.remarks}
+                          />
+                        )}
                       </div>
                     </>
                   ) : (
                     <p className="text-sm text-[#AAAAAA] text-center py-6">
-                      Summary data unavailable
+                      Cumulative summary not yet available
                     </p>
                   )}
                 </CardContent>

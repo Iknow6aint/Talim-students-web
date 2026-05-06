@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { gradesService, CourseGradeRecord } from "@/services/grades.service";
+import { gradesService, StudentCumulativeGrade } from "@/services/grades.service";
 
 function classifyError(err: unknown): string {
-  if (!(err instanceof Error)) return "Failed to fetch grade records";
+  if (!(err instanceof Error)) return "Failed to fetch cumulative grade";
   const m = err.message;
   if (m.includes("fetch") || m.includes("network") || m.includes("Failed to fetch"))
     return "Unable to connect to the server. Please check your internet connection.";
@@ -11,21 +11,19 @@ function classifyError(err: unknown): string {
     return "Your session has expired. Please log in again.";
   if (m.includes("403"))
     return "You don't have permission to access this data.";
-  if (m.includes("404"))
-    return "Grade records not found. Please contact support.";
   if (m.includes("500") || m.toLowerCase().includes("server"))
     return "Server error. Please try again later.";
   return m;
 }
 
-export const useCourseGradeRecords = () => {
-  const [gradeRecords, setGradeRecords] = useState<CourseGradeRecord[] | null>(null);
+export const useStudentCumulativeGrade = () => {
+  const [cumulativeGrade, setCumulativeGrade] = useState<StudentCumulativeGrade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { user, accessToken } = useAuthContext();
 
-  const fetchRecords = useCallback(async () => {
+  const fetchGrade = useCallback(async () => {
     if (!accessToken) {
       setError("No access token available");
       setIsLoading(false);
@@ -43,8 +41,8 @@ export const useCourseGradeRecords = () => {
     setError(null);
 
     try {
-      const data = await gradesService.getCourseGradesByTerm(termId, accessToken);
-      setGradeRecords(data);
+      const data = await gradesService.getCumulativeGradeByTerm(termId, accessToken);
+      setCumulativeGrade(data);
     } catch (err) {
       setError(classifyError(err));
     } finally {
@@ -53,8 +51,8 @@ export const useCourseGradeRecords = () => {
   }, [accessToken, user?.termId]);
 
   useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    fetchGrade();
+  }, [fetchGrade]);
 
-  return { gradeRecords, isLoading, error, refetch: fetchRecords };
+  return { cumulativeGrade, isLoading, error, refetch: fetchGrade };
 };
