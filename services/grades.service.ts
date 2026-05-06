@@ -1,29 +1,43 @@
 import { API_BASE_URL } from "@/lib/constants";
 
+export interface AssessmentGradeRecord {
+  _id?: string;
+  assessmentId: string | { _id: string; title?: string; name?: string; type?: string };
+  actualScore?: number;
+  score?: number;
+  maxScore: number;
+  assessmentName?: string;
+  assessmentType?: string;
+  weightPercentage?: number;
+  gradeDate?: string;
+  feedback?: string;
+}
+
 export interface CourseGradeRecord {
-  courseId: string | null;
+  _id?: string;
+  courseId:
+    | string
+    | null
+    | { _id: string; name?: string; code?: string; creditHours?: number };
+  studentId?: string | object;
+  termId?: string | object;
+  // Flattened fields (legacy / API may return flat or nested)
   courseName?: string;
   courseCode?: string;
   creditHours?: number;
-  assessments?: Array<{
-    assessmentId: string;
-    assessmentName: string;
-    assessmentType: string;
-    maxScore: number;
-    weightPercentage: number;
-    score?: number;
-    gradeDate?: string;
-    feedback?: string;
-  }>;
+  // New-shape assessment records
+  assessmentGradeRecords?: AssessmentGradeRecord[];
+  // Legacy assessment shape
+  assessments?: AssessmentGradeRecord[];
   courseAverage?: number;
   letterGrade?: string;
   gradePoints?: number;
   status?: "completed" | "in_progress" | "not_started";
-  // Added fields from new API response
   percentage?: number;
   cumulativeScore?: number;
   gradeLevel?: string;
   maxScore?: number;
+  isActive?: boolean;
 }
 
 export interface StudentKPIData {
@@ -48,67 +62,67 @@ export interface StudentKPIData {
   totalStudentsInClass: number;
 }
 
+function extractArray<T>(json: unknown): T[] {
+  if (Array.isArray(json)) return json as T[];
+  if (json && typeof json === "object") {
+    const paginated = json as { data?: T[] };
+    if (Array.isArray(paginated.data)) return paginated.data;
+  }
+  return [];
+}
+
 export const gradesService = {
   getCourseGradeRecords: async (
     studentId: string,
     termId: string,
     accessToken: string
   ): Promise<CourseGradeRecord[]> => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/grade-records/course-grade-records/student/${studentId}/term/${termId}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+    const response = await fetch(
+      `${API_BASE_URL}/grade-records/course-grade-records/student/${studentId}/term/${termId}`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      return await response.json();
-    } catch (error) {
-      console.error("Network error:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        (errorData as { message?: string }).message ||
+          `HTTP error! status: ${response.status}`
+      );
     }
+
+    const json = await response.json();
+    return extractArray<CourseGradeRecord>(json);
   },
 
   getStudentKPIs: async (
     studentId: string,
     accessToken: string
   ): Promise<StudentKPIData> => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/students/${studentId}/dashboard/kpis`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+    const response = await fetch(
+      `${API_BASE_URL}/students/${studentId}/dashboard/kpis`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      return await response.json();
-    } catch (error) {
-      console.error("Network error:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        (errorData as { message?: string }).message ||
+          `HTTP error! status: ${response.status}`
+      );
     }
+
+    return response.json();
   },
 };
