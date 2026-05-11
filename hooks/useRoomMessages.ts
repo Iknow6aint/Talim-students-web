@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useWebSocketContext } from '@/contexts/WebSocketContext';
+import { useWebSocketContextSafe } from '@/contexts/WebSocketContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ChatMessage, ChatRoomJoinedData, FetchMessagesData } from './useWebSocket';
 
@@ -40,25 +40,8 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
   const { user } = useAuthContext();
   const mountedRef = useRef(true);
   
-  // Get WebSocket context with error handling
-  let webSocketContext;
-  try {
-    webSocketContext = useWebSocketContext();
-  } catch (error) {
-    return {
-      messages: [],
-      isLoading: false,
-      isLoadingMore: false,
-      hasMore: false,
-      roomInfo: null,
-      error: 'WebSocket not available',
-      sendMessage: () => {},
-      loadMoreMessages: () => {},
-      markAsRead: () => {},
-      onNewMessage: () => () => {},
-    };
-  }
-
+  // Called unconditionally — returns null when used outside a WebSocketProvider.
+  const webSocketContext = useWebSocketContextSafe();
   const {
     isConnected,
     sendChatMessage,
@@ -67,7 +50,15 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     onChatRoomJoined,
     onChatMessage,
     onMessagesUpdate,
-  } = webSocketContext;
+  } = (webSocketContext ?? {
+    isConnected: false,
+    sendChatMessage: () => {},
+    markMessageAsRead: () => {},
+    fetchMessages: () => {},
+    onChatRoomJoined: (_cb: any) => () => {},
+    onChatMessage: (_cb: any) => () => {},
+    onMessagesUpdate: (_cb: any) => () => {},
+  });
 
   // Reset state when room changes
   useEffect(() => {
@@ -144,14 +135,15 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
       const messageRoomId = message.roomId || (message as any).chatRoomId;
       if (!mountedRef.current || messageRoomId !== roomId) return;
 
-      console.log('📨 New real-time message received for student:', message);
-      
+      const currentUserId = user?.id || user?.userId;
+      if (message.senderId !== currentUserId && message._id) {
+        markMessageAsRead(message._id);
+      }
+
       // Add new message to the end
       setMessages(prev => {
-        // Check if message already exists to avoid duplicates
         const exists = prev.some(m => m._id === message._id);
         if (exists) return prev;
-        
         return [...prev, message];
       });
     });

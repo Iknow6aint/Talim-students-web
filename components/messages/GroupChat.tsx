@@ -53,9 +53,9 @@ const GroupChat = ({
 
         // For students app, prioritize user.id over user.userId
         const possibleIds = [
+            (user as any).id,
             user.userId,
-            user.userId,
-            (user as any)._id, // fallback for different user object structures
+            (user as any)._id,
         ].filter(Boolean);
 
         console.log('🔍 Getting current user ID:', {

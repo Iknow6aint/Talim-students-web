@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useWebSocketContext } from "@/contexts/WebSocketContext";
+import { useWebSocketContextSafe } from "@/contexts/WebSocketContext";
 import { ChatRoomData, ChatRoomsUpdateData, ChatMessage } from "./useWebSocket";
 
 export interface RealtimeChatRoom extends ChatRoomData {
@@ -55,34 +55,11 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
 
   const { user } = useAuthContext();
 
-  // Get WebSocket context with error handling
-  let webSocketContext;
-  try {
-    webSocketContext = useWebSocketContext();
-  } catch (error) {
-    // Return a default state if context is not available
-    return {
-      chatRooms: [],
-      isLoading: false,
-      isConnected: false,
-      error: "WebSocket not available",
-      refreshChatRooms: () => {},
-      searchChatRooms: () => [],
-      getFilteredChatRooms: () => [],
-      selectedRoomId: null,
-      selectRoom: () => {},
-      unselectRoom: () => {},
-      sendMessage: () => {},
-      markAsRead: () => {},
-      onNewMessage: () => () => {},
-      onRoomUpdate: () => () => {},
-    };
-  }
-
+  // Called unconditionally — returns null when used outside a WebSocketProvider.
+  const webSocketContext = useWebSocketContextSafe();
   const {
     socket,
     isConnected,
-    connectionStatus,
     fetchChatRooms,
     onChatRoomsUpdate,
     onChatMessage,
@@ -90,62 +67,59 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     joinChatRoom,
     leaveChatRoom,
     markMessageAsRead,
-  } = webSocketContext;
+    onUnreadMessagesUpdate,
+  } = (webSocketContext ?? {
+    socket: null,
+    isConnected: false,
+    fetchChatRooms: () => {},
+    onChatRoomsUpdate: (_cb: any) => () => {},
+    onChatMessage: (_cb: any) => () => {},
+    sendChatMessage: () => {},
+    joinChatRoom: () => {},
+    leaveChatRoom: () => {},
+    markMessageAsRead: () => {},
+    onUnreadMessagesUpdate: (_cb: any) => () => {},
+  });
 
   const searchTermRef = useRef<string>("");
   const mountedRef = useRef(true);
+  const selectedRoomIdRef = useRef<string | null>(null);
+
+  // Keep ref in sync so event-handler closures can read the current room without
+  // stale-closure bugs.
+  useEffect(() => {
+    selectedRoomIdRef.current = selectedRoomId;
+  }, [selectedRoomId]);
 
   // Initial chat rooms fetch when connected
   useEffect(() => {
-    // For students app, prioritize user.id over user.userId
     const userId = user?.id || user?.userId;
 
-    console.log("🔍 useRealtimeChat connection check:", {
-      isConnected,
-      user: user
-        ? {
-            id: user?.id,
-            userId: user?.userId,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            role: user?.role,
-          }
-        : null,
-      hasUserId: !!userId,
-      socketConnected: socket?.connected,
-    });
-
     if (isConnected && userId && socket?.connected) {
-      console.log("🔄 Fetching chat rooms for student user:", userId);
       setIsLoading(true);
       setError(null);
       fetchChatRooms(userId);
     } else {
-      console.log("🔍 Not fetching chat rooms:", {
-        isConnected,
-        hasUserId: !!userId,
-        socketConnected: socket?.connected,
-      });
+      setIsLoading(false);
     }
   }, [isConnected, user?.id, user?.userId, socket?.connected, fetchChatRooms]);
 
-  // Transform chat room data for better UX - Students focus on groups
+  // Transform chat room data for better UX
   const transformChatRoom = useCallback(
     (room: ChatRoomData): RealtimeChatRoom => {
       let displayName = room.name || "Chat Room";
       let avatarInfo: RealtimeChatRoom["avatarInfo"] = {
         type: "initials",
         value: "CR",
-        bgColor: generateColorFromString(room.roomId),
+        bgColor: generateColorFromString(displayName),
       };
       let isOnline = false;
 
-      // Handle different room types - Students mainly use group/class chats
       switch (room.type) {
         case "group":
         case "class":
         case "class_group":
-          // For group/class chats, use the room name directly
+        case "course_group": {
           displayName = room.name || `Class ${room.classId || "Chat"}`;
           avatarInfo = {
             type: "initials",
@@ -155,16 +129,15 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
               .join("")
               .slice(0, 2)
               .toUpperCase(),
-            bgColor: generateColorFromString(room.roomId),
+            bgColor: generateColorFromString(displayName),
           };
-          // Check if any teachers are online
           isOnline = room.participants.some(
             (p) => p.role === "teacher" && p.isOnline
           );
           break;
+        }
 
-        case "one_to_one":
-          // Although students mainly use groups, handle private chats if they exist
+        case "one_to_one": {
           const otherParticipant = room.participants.find(
             (p) => p.userId !== user?.id && p.userId !== user?.userId
           );
@@ -188,14 +161,15 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
               avatarInfo = {
                 type: "initials",
                 value: initials || "U",
-                bgColor: generateColorFromString(otherParticipant.userId),
+                bgColor: generateColorFromString(displayName),
               };
             }
           }
           break;
+        }
       }
 
-      // Transform lastMessage to match expected format
+      // Normalise lastMessage — backend may send 'text' instead of 'content'
       let transformedLastMessage = room.lastMessage;
       if (room.lastMessage && (room.lastMessage as any).text) {
         transformedLastMessage = {
@@ -220,76 +194,38 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     if (!isConnected) return;
 
     const unsubscribe = onChatRoomsUpdate((data: ChatRoomsUpdateData) => {
-      console.log("📨 Chat rooms update received for student:", data);
-      console.log(
-        "🔍 Room types found:",
-        data.rooms.map((r) => ({
-          roomId: r.roomId,
-          name: r.name,
-          type: r.type,
-        }))
-      );
-
       if (!mountedRef.current) return;
 
-      try {
-        // Filter for group/class chats primarily - students don't typically use private chats
-        const groupRooms = data.rooms.filter(
-          (room) =>
-            room.type === "group" ||
-            room.type === "class" ||
-            room.type === "class_group"
-        );
-
-        console.log(
-          "🎯 Filtered group rooms:",
-          groupRooms.map((r) => ({
-            roomId: r.roomId,
-            name: r.name,
-            type: r.type,
-          }))
-        );
-
-        const transformedRooms = groupRooms.map(transformChatRoom);
-
-        console.log(
-          "✨ Transformed rooms for students:",
-          transformedRooms.map((r) => ({
-            roomId: r.roomId,
-            displayName: r.displayName,
-            type: r.type,
-            participantCount: r.participants.length,
-          }))
-        );
-
-        // Sort by last message time
-        const sortedRooms = transformedRooms.sort((a, b) => {
-          const timeA = a.lastMessage?.timestamp
-            ? new Date(a.lastMessage.timestamp).getTime()
-            : 0;
-          const timeB = b.lastMessage?.timestamp
-            ? new Date(b.lastMessage.timestamp).getTime()
-            : 0;
-          return timeB - timeA;
-        });
-
-        setChatRooms(sortedRooms);
+      if (!data || !data.rooms || !Array.isArray(data.rooms)) {
+        setError("Invalid chat rooms data received");
         setIsLoading(false);
-        setError(null);
-
-        console.log(
-          `📨 Updated ${sortedRooms.length} group chat rooms for student`,
-          {
-            roomNames: sortedRooms.map((r) => r.displayName),
-            totalRooms: data.totalRooms,
-            filteredFrom: data.rooms.length,
-          }
-        );
-      } catch (err) {
-        console.error("Error processing chat rooms update:", err);
-        setError("Failed to process chat rooms");
-        setIsLoading(false);
+        return;
       }
+
+      const transformedRooms = data.rooms.map((roomData) => {
+        const transformed = transformChatRoom(roomData);
+        // Preserve locally-zeroed unread count for the open room so a stale
+        // server snapshot doesn't re-show the badge.
+        if (transformed.roomId === selectedRoomIdRef.current) {
+          return { ...transformed, unreadCount: 0 };
+        }
+        return transformed;
+      });
+
+      // Sort by last message time
+      transformedRooms.sort((a, b) => {
+        const timeA = a.lastMessage?.timestamp
+          ? new Date(a.lastMessage.timestamp).getTime()
+          : new Date(a.updatedAt).getTime();
+        const timeB = b.lastMessage?.timestamp
+          ? new Date(b.lastMessage.timestamp).getTime()
+          : new Date(b.updatedAt).getTime();
+        return timeB - timeA;
+      });
+
+      setChatRooms(transformedRooms);
+      setIsLoading(false);
+      setError(null);
     });
 
     return unsubscribe;
@@ -300,14 +236,12 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     if (!isConnected) return;
 
     const unsubscribe = onChatMessage((message: ChatMessage) => {
-      console.log("📨 New message received in student app:", message);
-
       if (!mountedRef.current) return;
 
-      // Update the chat room's last message
       setChatRooms((prevRooms) => {
         const updatedRooms = prevRooms.map((room) => {
           if (room.roomId === message.roomId) {
+            const isCurrentRoom = room.roomId === selectedRoomIdRef.current;
             return {
               ...room,
               lastMessage: {
@@ -318,18 +252,17 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
                 type: message.type,
               },
               updatedAt: message.timestamp,
-              // Increment unread count if not from current user
-              unreadCount:
-                message.senderId !== user?.id &&
-                message.senderId !== user?.userId
-                  ? room.unreadCount + 1
+              unreadCount: isCurrentRoom
+                ? 0
+                : message.senderId !== user?.id &&
+                    message.senderId !== user?.userId
+                  ? (room.unreadCount || 0) + 1
                   : room.unreadCount,
             };
           }
           return room;
         });
 
-        // Re-sort by last message time
         return updatedRooms.sort((a, b) => {
           const timeA = a.lastMessage?.timestamp
             ? new Date(a.lastMessage.timestamp).getTime()
@@ -348,11 +281,22 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
   // Chat room operations
   const refreshChatRooms = useCallback(() => {
     if (isConnected) {
-      console.log("🔄 Manual refresh triggered for student");
       setIsLoading(true);
       fetchChatRooms(user?.id || user?.userId);
     }
-  }, [isConnected, fetchChatRooms]);
+  }, [isConnected, fetchChatRooms, user?.id, user?.userId]);
+
+  // Sync unread counts when the backend pushes a global update.
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const unsubscribe = onUnreadMessagesUpdate(() => {
+      if (!mountedRef.current) return;
+      refreshChatRooms();
+    });
+
+    return unsubscribe;
+  }, [isConnected, onUnreadMessagesUpdate, refreshChatRooms]);
 
   const searchChatRooms = useCallback(
     (searchTerm: string): RealtimeChatRoom[] => {
@@ -381,7 +325,6 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
         return chatRooms;
       }
 
-      // Students primarily filter by subject/class types
       if (type === "classes") {
         return chatRooms.filter(
           (room) => room.type === "class" || room.type === "class_group"
@@ -402,16 +345,19 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     (roomId: string) => {
       if (selectedRoomId === roomId) return;
 
-      // Leave current room if any
       if (selectedRoomId) {
         leaveChatRoom(selectedRoomId);
       }
 
-      // Join new room
       setSelectedRoomId(roomId);
       joinChatRoom(roomId);
 
-      console.log(`📨 Student joined chat room: ${roomId}`);
+      // Zero unread count for the room being opened
+      setChatRooms((prevRooms) =>
+        prevRooms.map((room) =>
+          room.roomId === roomId ? { ...room, unreadCount: 0 } : room
+        )
+      );
     },
     [selectedRoomId, joinChatRoom, leaveChatRoom]
   );
@@ -420,7 +366,6 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     if (selectedRoomId) {
       leaveChatRoom(selectedRoomId);
       setSelectedRoomId(null);
-      console.log("📨 Student left current chat room");
     }
   }, [selectedRoomId, leaveChatRoom]);
 
@@ -428,12 +373,10 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
   const sendMessage = useCallback(
     (content: string, type: "text" | "voice" = "text", duration?: number) => {
       if (!selectedRoomId) {
-        console.error("No room selected for sending message");
         return;
       }
 
       if (!user?.id && !user?.userId) {
-        console.error("No user information available");
         return;
       }
 
@@ -449,7 +392,6 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
       };
 
       sendChatMessage(messageData);
-      console.log("📨 Student sent message:", messageData);
     },
     [selectedRoomId, user, sendChatMessage]
   );
@@ -461,7 +403,6 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
     [markMessageAsRead]
   );
 
-  // Event handlers for external use
   const onNewMessage = useCallback(
     (callback: (message: ChatMessage) => void) => {
       return onChatMessage(callback);
@@ -470,8 +411,7 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
   );
 
   const onRoomUpdate = useCallback(
-    (callback: (roomId: string, room: RealtimeChatRoom) => void) => {
-      // This would be implemented if needed for real-time room updates
+    (_callback: (roomId: string, room: RealtimeChatRoom) => void) => {
       return () => {};
     },
     []
@@ -512,7 +452,7 @@ function generateColorFromString(str: string): string {
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
 
   const hue = Math.abs(hash) % 360;

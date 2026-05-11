@@ -130,6 +130,7 @@ export interface WebSocketContextType {
     callback: (data: ChatRoomJoinedData) => void
   ) => () => void;
   onMessagesUpdate: (callback: (data: FetchMessagesData) => void) => () => void;
+  onUnreadMessagesUpdate: (callback: (data: { userId: string; unreadCount: number }) => void) => () => void;
 
   // Connection management
   connect: (userId: string) => void;
@@ -482,9 +483,21 @@ export const useWebSocket = (): WebSocketContextType => {
     (callback: (data: FetchMessagesData) => void) => {
       if (!socketRef.current) return () => {};
 
-      socketRef.current.on("messages-update", callback);
+      socketRef.current.on("messages-fetched", callback);
       return () => {
-        socketRef.current?.off("messages-update", callback);
+        socketRef.current?.off("messages-fetched", callback);
+      };
+    },
+    []
+  );
+
+  const onUnreadMessagesUpdate = useCallback(
+    (callback: (data: { userId: string; unreadCount: number }) => void) => {
+      if (!socketRef.current) return () => {};
+
+      socketRef.current.on("unread-messages-update", callback);
+      return () => {
+        socketRef.current?.off("unread-messages-update", callback);
       };
     },
     []
@@ -517,6 +530,7 @@ export const useWebSocket = (): WebSocketContextType => {
     onChatRoomsUpdate,
     onChatRoomJoined,
     onMessagesUpdate,
+    onUnreadMessagesUpdate,
 
     // Connection management
     connect,

@@ -64,6 +64,7 @@ export default function ChatUI() {
               <>
                 {selectedChat.type === "group" ? (
                   <GroupChat
+                    key={selectedChat.room?.roomId}
                     replyingMessage={replyingMessage}
                     setReplyingMessage={setReplyingMessage}
                     openSubMenu={openSubMenu}
@@ -73,11 +74,13 @@ export default function ChatUI() {
                   />
                 ) : (
                   <PrivateChat
+                    key={selectedChat.room?.roomId}
                     replyingMessage={replyingMessage}
                     setReplyingMessage={setReplyingMessage}
                     openSubMenu={openSubMenu}
                     toggleSubMenu={toggleSubMenu}
                     onBack={onBack}
+                    room={selectedChat.room}
                   />
                 )}
               </>
