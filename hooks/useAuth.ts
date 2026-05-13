@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
 import nookies from "nookies";
 import { authService } from "@/services/auth.service";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -17,18 +16,12 @@ export const useAuth = () => {
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
-      // 1. Perform login to get tokens
       const loginResponse = await authService.login(credentials);
-
-      // 2. Use introspect endpoint to get complete user details
       const introspectResponse = await authService.introspect(
         loginResponse.access_token
       );
-
-      // 3. Save the entire user object from introspect response
       const userData = introspectResponse.user;
 
-      // 4. Store tokens and user data
       nookies.set(null, "access_token", loginResponse.access_token, {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
@@ -36,13 +29,11 @@ export const useAuth = () => {
         sameSite: "strict",
       });
 
-      // Also store in localStorage for consistency
       localStorage.setItem("accessToken", loginResponse.access_token);
       localStorage.setItem("refreshToken", loginResponse.refresh_token || "");
       localStorage.setItem("user", JSON.stringify(userData));
       setAuthState(userData, loginResponse.access_token);
 
-      // Trigger custom auth event for WebSocket context
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("auth-changed", {
@@ -51,14 +42,9 @@ export const useAuth = () => {
         );
       }
 
-      toast.success("Login successful!");
-      router.push("/dashboard");
-
+      router.push("/onboarding");
       return userData;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Login failed";
-      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
