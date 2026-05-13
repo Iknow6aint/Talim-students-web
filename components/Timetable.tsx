@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimetable, TimetableSubject } from "@/hooks/useTimetable";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 
 // Define a TypeScript interface for a single timetable entry.
 interface TimetableEntry {

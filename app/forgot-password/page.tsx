@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 import { authService } from "../services/auth.service";
 
 type Step = 'email' | 'otp' | 'newPassword';
@@ -307,8 +307,6 @@ const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
-      <Toaster position="top-right" />
-      
       <div className="relative flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 lg:py-24">
         {/* Back Button */}
         <div className="absolute top-8 left-8">

@@ -68,7 +68,6 @@ export const attendanceService = {
         }
       );
 
-      console.log("API Response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -79,7 +78,6 @@ export const attendanceService = {
       }
 
       const data = await response.json();
-      console.log("API Success response:", data);
       return data;
     } catch (error) {
       console.error("Network error:", error);

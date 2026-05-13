@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { curriculumService, Course, Curriculum, Subject } from '@/services/curriculum.service';
 import { studentService } from '@/services/student.service';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/components/CustomToast';
 import { AcademicResponse } from '@/types/auth';
 
 export const useCurriculum = () => {
@@ -24,16 +24,11 @@ export const useCurriculum = () => {
     if (!accessToken || !isAuthenticated || !user?.userId) return;
 
     try {
-      console.log(`Hook: Fetching student details for user: ${user.userId}`);
       const studentData: AcademicResponse = await studentService.getAcademicDetails(user.userId, accessToken);
-      console.log(`Hook: Student data received:`, studentData);
-      
       const classId = studentData.data[0]?.classId;
-      console.log(`Hook: Extracted class ID: ${classId}`);
-      
+
       if (classId) {
         setStudentClassId(classId);
-        console.log(`Hook: Set student class ID to: ${classId}`);
       } else {
         console.error('Hook: No class ID found in student data');
       }
@@ -45,22 +40,13 @@ export const useCurriculum = () => {
 
   // Fetch courses by student's class ID
   const fetchCoursesByClass = async () => {
-    if (!accessToken || !isAuthenticated || !studentClassId) {
-      console.log('Hook: Missing requirements for fetching courses by class', {
-        accessToken: !!accessToken,
-        isAuthenticated,
-        studentClassId
-      });
-      return;
-    }
+    if (!accessToken || !isAuthenticated || !studentClassId) return;
 
-    console.log(`Hook: Fetching courses for class ID: ${studentClassId}`);
     setIsLoading(true);
     setError(null);
 
     try {
       const coursesData = await curriculumService.getCoursesByClass(accessToken, studentClassId);
-      console.log(`Hook: Received ${coursesData.length} courses:`, coursesData);
       setCourses(coursesData);
     } catch (err: any) {
       console.error('Hook: Error fetching courses by class:', err);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 
 // WebSocket connection configuration
 const WEBSOCKET_URL =
@@ -174,17 +174,13 @@ export const useWebSocket = (): WebSocketContextType => {
   // Connect to WebSocket
   const connect = useCallback(
     (userId: string) => {
-      console.log("loginUserId", userId);
-
       // Prevent multiple connections
       if (socketRef.current?.connected) {
-        console.log("🔌 Already connected to WebSocket");
         return;
       }
 
       // Prevent multiple connection attempts while connecting
       if (connectionStatus === "connecting") {
-        console.log("🔌 Connection in progress, skipping duplicate attempt");
         return;
       }
 
@@ -194,7 +190,6 @@ export const useWebSocket = (): WebSocketContextType => {
         reconnectAttemptsRef.current >= maxReconnectAttempts &&
         now - lastFailedAttemptRef.current < reconnectCooldown
       ) {
-        console.log("🔌 Still in cooldown period, skipping connection attempt");
         return;
       }
 
@@ -203,24 +198,19 @@ export const useWebSocket = (): WebSocketContextType => {
         reconnectAttemptsRef.current = 0;
       }
 
-      console.log(`🔌 Connecting to WebSocket with userId: ${userId}`);
       setConnectionStatus("connecting");
       userIdRef.current = userId;
 
       try {
         const socket = io(WEBSOCKET_URL, {
           auth: { userId },
-          transports: ["websocket"],
-          upgrade: false,
-          rememberUpgrade: false,
+          transports: ["websocket", "polling"],
           timeout: 10000,
-          // Disable automatic reconnection to prevent double reconnection
           reconnection: false,
         });
 
         // Connection successful
         socket.on("connect", () => {
-          console.log("🔌 WebSocket connected successfully");
           setIsConnected(true);
           setConnectionStatus("connected");
 
@@ -247,9 +237,6 @@ export const useWebSocket = (): WebSocketContextType => {
           setConnectionStatus("error");
 
           if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-            console.log(
-              `🔌 Max reconnection attempts (${maxReconnectAttempts}) reached. Entering cooldown.`
-            );
             showToast("error", "Unable to connect to real-time services");
           } else if (reconnectAttemptsRef.current === 1) {
             // Only show error on first attempt to avoid spam
@@ -259,7 +246,6 @@ export const useWebSocket = (): WebSocketContextType => {
 
         // Disconnection
         socket.on("disconnect", (reason) => {
-          console.log("🔌 WebSocket disconnected:", reason);
           setIsConnected(false);
           setConnectionStatus("disconnected");
 
@@ -278,17 +264,8 @@ export const useWebSocket = (): WebSocketContextType => {
                 30000
               ); // Exponential backoff
               reconnectTimeoutRef.current = setTimeout(() => {
-                console.log(
-                  `🔄 Attempting to reconnect... (attempt ${
-                    reconnectAttemptsRef.current + 1
-                  }/${maxReconnectAttempts})`
-                );
                 reconnect();
               }, delay);
-            } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-              console.log(
-                "🔌 Max reconnection attempts reached. Manual reconnection required."
-              );
             }
           }
         });
@@ -325,7 +302,6 @@ export const useWebSocket = (): WebSocketContextType => {
     setConnectionStatus("disconnected");
     userIdRef.current = null;
     reconnectAttemptsRef.current = 0; // Reset attempts on manual disconnect
-    console.log("🔌 WebSocket manually disconnected");
   }, []);
 
   // Reconnect to WebSocket
@@ -347,7 +323,6 @@ export const useWebSocket = (): WebSocketContextType => {
         return;
       }
       socketRef.current.emit("join-chat-room", { roomId, userId: id });
-      console.log(`📨 Joined chat room: ${roomId}`);
     } else {
       toast.error("Not connected to chat service");
     }
@@ -356,7 +331,6 @@ export const useWebSocket = (): WebSocketContextType => {
   const leaveChatRoom = useCallback((roomId: string) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit("leave-chat-room", { roomId });
-      console.log(`📨 Left chat room: ${roomId}`);
     }
   }, []);
 
@@ -366,7 +340,6 @@ export const useWebSocket = (): WebSocketContextType => {
     ) => {
       if (socketRef.current?.connected) {
         socketRef.current.emit("send-chat-message", message);
-        console.log(`📨 Sent message to room: ${message.roomId}`);
       } else {
         toast.error("Not connected to chat service");
       }
@@ -388,7 +361,6 @@ export const useWebSocket = (): WebSocketContextType => {
         return;
       }
       socketRef.current.emit("fetch-chat-rooms", { userId: id });
-      console.log("📨 Fetching chat rooms for user:", id);
     } else {
       toast.error("Not connected to chat service");
     }
@@ -403,7 +375,6 @@ export const useWebSocket = (): WebSocketContextType => {
     }) => {
       if (socketRef.current?.connected) {
         socketRef.current.emit("fetch-messages", data);
-        console.log(`📨 Fetching messages for room: ${data.roomId}`);
       } else {
         toast.error("Not connected to chat service");
       }
@@ -429,7 +400,6 @@ export const useWebSocket = (): WebSocketContextType => {
       if (!socketRef.current) return () => {};
 
       socketRef.current.on("notification", (notification: NotificationData) => {
-        console.log("🔔 Received notification:", notification);
         callback(notification);
 
         // Show toast notification with deduplication

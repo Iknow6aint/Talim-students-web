@@ -80,8 +80,6 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     const unsubscribe = onChatRoomJoined((data: ChatRoomJoinedData) => {
       if (!mountedRef.current || data.roomId !== roomId) return;
 
-      console.log('📨 Room joined data received for student:', data);
-      
       setRoomInfo({
         roomId: data.roomId,
         roomName: data.roomName,
@@ -89,17 +87,24 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
         participants: data.participants,
         totalParticipants: data.totalParticipants,
       });
-      
-      // Set initial messages (most recent)
+
       setMessages(data.messages || []);
       setHasMore(data.hasMore || false);
       setNextCursor(data.nextCursor);
       setIsLoading(false);
       setError(null);
+
+      // Bulk-mark all initial messages from others as read
+      const currentUserId = user?.id || user?.userId;
+      (data.messages || []).forEach((msg) => {
+        if (msg.senderId !== currentUserId && msg._id) {
+          markMessageAsRead(msg._id);
+        }
+      });
     });
 
     return unsubscribe;
-  }, [isConnected, roomId, onChatRoomJoined]);
+  }, [isConnected, roomId, onChatRoomJoined, user, markMessageAsRead]);
 
   // Handle messages update (pagination)
   useEffect(() => {
@@ -108,8 +113,6 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     const unsubscribe = onMessagesUpdate((data: FetchMessagesData) => {
       if (!mountedRef.current || data.roomId !== roomId) return;
 
-      console.log('📨 Messages update received for student:', data);
-      
       if (data.direction === 'before') {
         // Loading older messages
         setMessages(prev => [...data.messages, ...prev]);
@@ -149,7 +152,7 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     });
 
     return unsubscribe;
-  }, [isConnected, roomId, onChatMessage]);
+  }, [isConnected, roomId, onChatMessage, user, markMessageAsRead]);
 
   // Message operations
   const sendMessage = useCallback((
@@ -178,7 +181,6 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     };
     
     sendChatMessage(messageData);
-    console.log('📨 Student sent message (no optimistic update):', messageData);
   }, [roomId, isConnected, user, sendChatMessage]);
 
   const loadMoreMessages = useCallback(() => {
@@ -186,7 +188,6 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
       return;
     }
     
-    console.log('📨 Loading more messages for room:', roomId);
     setIsLoadingMore(true);
     
     fetchMessages({

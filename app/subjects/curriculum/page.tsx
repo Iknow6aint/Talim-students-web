@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 import html2canvas from "html2canvas";
 import { Curriculum } from "@/services/curriculum.service";
 import { API_BASE_URL } from "@/lib/constants";

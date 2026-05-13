@@ -88,10 +88,8 @@ export const curriculumService = {
 
   // Get courses by class ID
   getCoursesByClass: async (accessToken: string, classId: string): Promise<Course[]> => {
-    console.log(`Service: Getting courses for class ID: ${classId}`);
     const endpoint = API_ENDPOINTS.COURSES_BY_CLASS.replace(':classId', classId);
-    console.log(`Service: Endpoint: ${endpoint}`);
-    
+
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
@@ -101,21 +99,16 @@ export const curriculumService = {
       }
     });
 
-    console.log(`Service: Response status: ${response.status}`);
-
     if (response.status === 401) {
       throw new Error('Session expired. Please log in again.');
     }
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(`Service: Error response:`, errorData);
       throw new Error(errorData.message || 'Failed to fetch courses by class');
     }
 
-    const data = await response.json();
-    console.log(`Service: Received ${data.length} courses:`, data);
-    return data;
+    return response.json();
   },
 
   // Get all subjects for the school

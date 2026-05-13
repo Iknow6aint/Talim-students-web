@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { Resource, ResourceServices } from "@/services/resource.service";
 import { AcademicResponse } from "@/types/auth";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 
 export const useResources = () => {
   const { user, accessToken, isAuthenticated } = useAuthContext();
@@ -50,7 +50,6 @@ export const useResources = () => {
       );
 
       setResources(resourceData); // this one go store am for state
-      console.log(resourceData);
 
       return resourceData;
     } catch (error) {

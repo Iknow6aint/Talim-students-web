@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 import { AcademicResponse, Timetable } from "@/types/auth";
 import { timetableService } from "@/services/timetable.service";
 import { API_ENDPOINTS } from "@/lib/constants";

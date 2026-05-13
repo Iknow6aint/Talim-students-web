@@ -36,54 +36,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const setAuthState = (newUser: User | null, newToken: string | null) => {
-    console.log("🔧 setAuthState called with:", {
-      user: newUser ? { id: newUser.id, email: newUser.email } : null,
-      hasToken: !!newToken,
-      tokenLength: newToken?.length,
-    });
-
-    // Save the entire user object without filtering
     setUser(newUser);
-
     setAccessToken(newToken);
     setIsAuthenticated(!!newUser && !!newToken);
-
-    console.log("🔧 Auth state updated:", {
-      hasUser: !!newUser,
-      hasToken: !!newToken,
-      isAuthenticated: !!newUser && !!newToken,
-    });
   };
 
   const checkAuth = async () => {
     try {
-      console.log("🔍 checkAuth starting...");
-
       // Check localStorage first (primary storage for students app)
       const userStr = localStorage.getItem("user");
       let token = localStorage.getItem("accessToken");
-
-      console.log("🔍 localStorage check:", {
-        hasUserStr: !!userStr,
-        hasToken: !!token,
-        userStrLength: userStr?.length,
-        tokenLength: token?.length,
-      });
 
       // Fallback to cookies if no token in localStorage
       if (!token) {
         const cookies = parseCookies();
         token = cookies.access_token;
-        console.log("🔍 cookies fallback:", { hasToken: !!token });
       }
 
       if (token && userStr) {
         try {
           const userData = JSON.parse(userStr) as User;
-          console.log("🔍 Parsed user data:", {
-            id: userData.id,
-            email: userData.email,
-          });
           setAuthState(userData, token);
           return true;
         } catch (error) {
@@ -93,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      console.log("🔍 No valid auth data found, setting to null");
       setAuthState(null, null);
       return false;
     } catch (error) {

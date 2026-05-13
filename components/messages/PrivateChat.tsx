@@ -54,43 +54,52 @@ export default function PrivateChat({
   const resolveSenderInfo = (message: any) => {
     let senderId = "";
     let senderName = "";
+    let avatar = "";
 
     if (message.senderId && typeof message.senderId === "object") {
-      senderId = message.senderId._id || message.senderId.userId || "";
+      senderId = message.senderId.userId || message.senderId._id || "";
       senderName = `${message.senderId.firstName || ""} ${message.senderId.lastName || ""}`.trim();
+      avatar = message.senderId.userAvatar || "";
     } else if (typeof message.senderId === "string") {
       senderId = message.senderId;
       senderName = message.senderName || message.sender || "";
     }
 
     const currentUserId = getCurrentUserId();
-    if (senderId === currentUserId && (!senderName || senderName === "Unknown") && user) {
-      senderName =
-        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-        user.email ||
-        "You";
+
+    if (currentUserId && senderId === currentUserId && user) {
+      if (!senderName || senderName === "Unknown") {
+        senderName =
+          `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+          user.email ||
+          "You";
+      }
+      if (!avatar) avatar = (user as any).userAvatar || "";
     }
 
-    if (!senderName && room?.participants) {
+    if ((!senderName || !avatar) && room?.participants) {
       const participant = room.participants.find(
-        (p: any) => (p.userId || p._id) === senderId
+        (p: any) => p._id === senderId || p.userId === senderId || (p as any).id === senderId
       );
       if (participant) {
-        senderName =
-          `${participant.firstName || ""} ${participant.lastName || ""}`.trim() ||
-          (participant as any).name ||
-          "Unknown User";
+        if (!senderName) {
+          senderName =
+            `${participant.firstName || ""} ${participant.lastName || ""}`.trim() ||
+            (participant as any).name ||
+            "Unknown User";
+        }
+        if (!avatar) avatar = participant.userAvatar || "";
       }
     }
 
-    return { senderId, senderName: senderName || "Unknown" };
+    return { senderId, senderName: senderName || "Unknown", avatar };
   };
 
   const isCurrentUser = (senderId: string, senderName: string): boolean => {
-    const currentUserId = getCurrentUserId();
-    if (!currentUserId) return false;
-    if (senderId === currentUserId) return true;
-    if (user?.firstName && user?.lastName && senderName) {
+    if (!user) return false;
+    const allUserIds = [(user as any).id, user.userId, (user as any)._id].filter(Boolean);
+    if (senderId && allUserIds.some(id => id === senderId)) return true;
+    if (user.firstName && user.lastName && senderName) {
       const fullName = `${user.firstName} ${user.lastName}`.trim();
       if (fullName.toLowerCase() === senderName.toLowerCase().trim()) return true;
     }
@@ -98,7 +107,7 @@ export default function PrivateChat({
   };
 
   const transformMessageForUI = (message: any) => {
-    const { senderId, senderName } = resolveSenderInfo(message);
+    const { senderId, senderName, avatar } = resolveSenderInfo(message);
     const isUserMessage = isCurrentUser(senderId, senderName);
     const messageText = message.text || message.content || "";
     const messageTime = (message as any).createdAt || message.timestamp || new Date();
@@ -113,7 +122,7 @@ export default function PrivateChat({
         minute: "2-digit",
       }),
       type: message.type || "text",
-      avatar: "",
+      avatar,
       color: getColorForUser(senderId, senderName),
       duration: message.duration,
       originalSenderId: senderId,

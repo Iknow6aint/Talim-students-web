@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/CustomToast";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { API_ENDPOINTS } from "@/lib/constants";
 

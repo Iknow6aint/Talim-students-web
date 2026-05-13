@@ -5,7 +5,7 @@ import { StudentOnboardingProvider } from "@/contexts/OnboardingContext";
 import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { Toaster } from "react-hot-toast";
+import { ToastViewport } from "@/components/CustomToast";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -62,7 +62,7 @@ export default function RootLayout({
             <AuthGuard>
               <WebSocketProvider>
                 {children}
-                <Toaster position="top-right" />
+                <ToastViewport />
               </WebSocketProvider>
             </AuthGuard>
           </StudentOnboardingProvider>

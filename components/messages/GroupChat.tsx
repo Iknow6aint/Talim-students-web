@@ -38,186 +38,90 @@ const GroupChat = ({
         isLoading,
         isLoadingMore,
         hasMore,
-        roomInfo,
         error,
         sendMessage,
         loadMoreMessages,
     } = useRoomMessages(room?.roomId || null);
 
-    // Helper to get current user ID
     const getCurrentUserId = (): string | undefined => {
-        if (!user) {
-            console.log('⚠️ No user object available yet (still loading)');
-            return undefined;
-        }
-
-        // For students app, prioritize user.id over user.userId
-        const possibleIds = [
-            (user as any).id,
-            user.userId,
-            (user as any)._id,
-        ].filter(Boolean);
-
-        console.log('🔍 Getting current user ID:', {
-            user,
-            possibleIds,
-            selectedId: possibleIds[0],
-        });
-
-        return possibleIds.length > 0 ? possibleIds[0] : undefined;
+        if (!user) return undefined;
+        return (user as any).id || user.userId || (user as any)._id;
     };
 
-    // Helper to get color based on sender
     const getColorForUser = (senderId: string, senderName: string = ''): string => {
-        const nameForColor = senderName || senderId || 'unknown';
-        return generateColorFromString(nameForColor);
+        return generateColorFromString(senderName || senderId || 'unknown');
     };
 
-    // Helper to resolve sender information from backend data
     const resolveSenderInfo = (message: any) => {
         let senderId = '';
         let senderName = '';
+        let avatar = '';
 
-        console.log('🔍 Raw message data for sender resolution:', {
-            message,
-            senderId: message.senderId,
-            senderName: message.senderName,
-            messageKeys: Object.keys(message)
-        });
-
-        // Handle senderId being an object (populated) vs string
         if (message.senderId && typeof message.senderId === 'object') {
-            senderId = message.senderId._id || message.senderId.userId || '';
+            // Prefer userId over _id so it aligns with auth context's user.userId
+            senderId = message.senderId.userId || message.senderId._id || '';
             senderName = `${message.senderId.firstName || ''} ${message.senderId.lastName || ''}`.trim();
-            console.log('📋 Sender is object:', { senderId, senderName, senderObject: message.senderId });
+            avatar = message.senderId.userAvatar || '';
         } else if (typeof message.senderId === 'string') {
             senderId = message.senderId;
-
-            // Try multiple fields for sender name
-            senderName = message.senderName ||
-                message.sender ||
-                (message as any).name ||
-                '';
-
-            console.log('📋 Sender is string:', {
-                senderId, senderName, availableFields: {
-                    senderName: message.senderName,
-                    sender: message.sender,
-                    name: (message as any).name
-                }
-            });
+            senderName = message.senderName || message.sender || (message as any).name || '';
         }
 
-        // If this is the current user and we don't have a proper sender name, use the current user's info
         const currentUserId = getCurrentUserId();
-        if (senderId === currentUserId && (!senderName || senderName === 'Unknown') && user) {
-            senderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'You';
-            console.log('🔄 Using current user info for sender name:', senderName);
+
+        // For current user's messages, always ensure name and avatar are set
+        if (currentUserId && senderId === currentUserId && user) {
+            if (!senderName || senderName === 'Unknown') {
+                senderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'You';
+            }
+            if (!avatar) avatar = (user as any).userAvatar || '';
         }
 
-        // For other users, try to resolve from room participants if no name found
-        if (!senderName || senderName.trim() === '') {
-            if (room?.participants) {
-                const participant = room.participants.find((p: any) => {
-                    const participantId = p.userId || p._id || (p as any).id;
-                    return participantId === senderId;
-                });
-
-                if (participant) {
-                    senderName = `${participant.firstName || ''} ${participant.lastName || ''}`.trim() ||
+        // Look up participant for missing name or avatar — compare all ID fields
+        if ((!senderName || senderName.trim() === '' || !avatar) && room?.participants) {
+            const participant = room.participants.find((p: any) =>
+                p._id === senderId || p.userId === senderId || (p as any).id === senderId
+            );
+            if (participant) {
+                if (!senderName || senderName.trim() === '') {
+                    senderName =
+                        `${participant.firstName || ''} ${participant.lastName || ''}`.trim() ||
                         (participant as any).name ||
                         (participant as any).email ||
                         'Unknown User';
-                    console.log('🔄 Resolved sender from participants:', { participant, senderName });
                 }
+                if (!avatar) avatar = participant.userAvatar || '';
             }
         }
 
-        // Final fallback to 'Unknown' if still no name
         if (!senderName || senderName.trim() === '') {
             senderName = 'Unknown';
-            console.log('⚠️ Using fallback "Unknown" for sender');
         }
 
-        console.log('✅ Final resolved sender:', { senderId, senderName });
-        return { senderId, senderName };
+        return { senderId, senderName, avatar };
     };
 
-    // Helper to determine if a message is from the current user
     const isCurrentUser = (senderId: string, senderName: string): boolean => {
-        const currentUserId = getCurrentUserId();
+        if (!user) return false;
 
-        // If we don't have a current user ID yet, we can't determine ownership
-        if (!currentUserId) {
-            console.log('⚠️ Cannot determine message ownership - user not loaded yet');
-            return false;
-        }
+        // Check senderId against all known user ID fields to handle backend format differences
+        const allUserIds = [(user as any).id, user.userId, (user as any)._id].filter(Boolean);
+        if (senderId && allUserIds.some(id => id === senderId)) return true;
 
-        console.log('🔍 isCurrentUser check:', {
-            senderId,
-            senderName,
-            currentUserId,
-            user: user ? {
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                id: user.userId,
-                userId: user.userId
-            } : null
-        });
-
-        // First try: direct ID match
-        if (currentUserId && senderId && senderId === currentUserId) {
-            console.log('✅ Matched by ID:', { senderId, currentUserId });
-            return true;
-        }
-
-        // Second try: match by name if user object is available
-        if (user && user.firstName && user.lastName && senderName) {
+        // Name fallback when ID fields differ between backend and auth context
+        if (user.firstName && user.lastName && senderName) {
             const currentUserName = `${user.firstName} ${user.lastName}`.trim();
-            console.log('🔍 Trying name match:', { currentUserName, senderName });
-
-            if (currentUserName === senderName || currentUserName.toLowerCase() === senderName.toLowerCase().trim()) {
-                console.log('✅ Matched by name:', { currentUserName, senderName });
-                return true;
-            }
+            if (currentUserName.toLowerCase() === senderName.toLowerCase().trim()) return true;
         }
 
-        console.log('❌ No match found:', {
-            senderId,
-            currentUserId,
-            senderName,
-            userFirstName: user?.firstName,
-        });
         return false;
     };
 
-    // Transform backend messages to UI format (matching Teachers app)
     const transformMessageForUI = (message: any, index: number) => {
-        // Resolve sender info from backend structure
-        const { senderId, senderName } = resolveSenderInfo(message);
+        const { senderId, senderName, avatar } = resolveSenderInfo(message);
         const isUserMessage = isCurrentUser(senderId, senderName);
-
-        // Handle both 'text' and 'content' fields from backend (socket logs show 'text' field)
         const messageText = message.text || message.content || '';
-
-        // Handle both 'createdAt' and 'timestamp' fields (socket logs show 'createdAt')
         const messageTime = (message as any).createdAt || message.timestamp || new Date();
-
-        console.log('🔄 Transforming message:', {
-            messageId: message._id,
-            originalSenderId: message.senderId,
-            resolvedSender: { senderId, senderName },
-            isUserMessage,
-            messageText,
-            messageTime,
-            currentUser: user ? {
-                id: user.userId,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim()
-            } : null
-        });
 
         return {
             _id: message._id,
@@ -226,88 +130,86 @@ const GroupChat = ({
             text: messageText,
             time: new Date(messageTime).toLocaleTimeString([], {
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
             }),
             type: message.type || 'text',
-            avatar: "", // Let GroupMessageBubble handle avatar fallback
+            avatar,
             color: getColorForUser(senderId, senderName),
             duration: message.duration,
-            // Keep original data for debugging
             originalSenderId: senderId,
             originalSenderName: senderName,
-            timestamp: messageTime
+            timestamp: messageTime,
         };
     };
 
-    // Auto-scroll to bottom when new messages arrive and reset sending state on new message
     useEffect(() => {
-        console.log('📨 Messages array updated:', {
-            messageCount: messages.length,
-            lastMessage: messages[messages.length - 1],
-            messages: messages.map(m => ({
-                _id: m._id,
-                senderName: (m as any).senderName,
-                senderId: (m as any).senderId,
-                text: (m as any).text,
-                content: m.content,
-                createdAt: (m as any).createdAt,
-                timestamp: m.timestamp
-            }))
-        });
-
-        // If a new message arrives and we were sending, reset the sending state
         if (messages.length > 0 && isSending) {
             const lastMessage = messages[messages.length - 1];
             const currentUserId = getCurrentUserId();
-
-            // Check if the last message is from the current user
             if (lastMessage && currentUserId) {
                 const { senderId } = resolveSenderInfo(lastMessage);
                 if (senderId === currentUserId) {
-                    console.log('✅ Our message appeared, resetting sending state');
                     setIsSending(false);
                 }
             }
         }
-
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isSending, getCurrentUserId]);
+    }, [messages, isSending]);
 
-    // Handle sending a new message
-    const handleSendMessage = useCallback((content: string) => {
-        if (!content.trim() || !room || isSending) {
-            console.log('❌ Cannot send message:', {
-                hasInput: !!content.trim(),
-                hasRoom: !!room,
-                isSending,
-            });
-            return;
-        }
-
-        console.log('📨 Sending message from student:', content.trim());
-        setIsSending(true);
-
-        try {
-            sendMessage(content.trim(), 'text');
-            // Keep sending state for a short time to show feedback, then reset
-            setTimeout(() => {
+    const handleSendMessage = useCallback(
+        (content: string) => {
+            if (!content.trim() || !room || isSending) return;
+            setIsSending(true);
+            try {
+                sendMessage(content.trim(), 'text');
+                setTimeout(() => setIsSending(false), 500);
+            } catch (err) {
+                console.error('Error sending message:', err);
                 setIsSending(false);
-            }, 500);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            setIsSending(false);
-        }
-    }, [room, isSending, sendMessage]);
+            }
+        },
+        [room, isSending, sendMessage]
+    );
 
-    // Scroll handling for loading more messages
     const handleScroll = useCallback(() => {
         if (!messagesContainerRef.current || isLoadingMore || !hasMore) return;
-
-        const { scrollTop } = messagesContainerRef.current;
-        if (scrollTop === 0) {
+        if (messagesContainerRef.current.scrollTop === 0) {
             loadMoreMessages();
         }
     }, [isLoadingMore, hasMore, loadMoreMessages]);
+
+    const groupMessagesByDate = () => {
+        const grouped: { [key: string]: any[] } = {};
+        messages.forEach((message) => {
+            const messageDate = (message as any).createdAt || message.timestamp || new Date();
+            const date = new Date(messageDate).toDateString();
+            if (!grouped[date]) grouped[date] = [];
+            grouped[date].push(message);
+        });
+
+        const sortedDates = Object.keys(grouped).sort(
+            (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        );
+        const sortedGrouped: { [key: string]: any[] } = {};
+        sortedDates.forEach((date) => {
+            sortedGrouped[date] = grouped[date].sort((a, b) => {
+                const timeA = new Date((a as any).createdAt || a.timestamp).getTime();
+                const timeB = new Date((b as any).createdAt || b.timestamp).getTime();
+                return timeA - timeB;
+            });
+        });
+        return sortedGrouped;
+    };
+
+    const formatDate = (date: Date) => {
+        const today = new Date();
+        const messageDate = new Date(date);
+        if (messageDate.toDateString() === today.toDateString()) return 'Today';
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (messageDate.toDateString() === yesterday.toDateString()) return 'Yesterday';
+        return messageDate.toLocaleDateString();
+    };
 
     const roomName = room?.displayName || 'Chat Room';
 
@@ -322,72 +224,18 @@ const GroupChat = ({
         );
     }
 
-    // Group messages by date for proper history tracking
-    const groupMessagesByDate = () => {
-        const grouped: { [key: string]: any[] } = {};
-
-        messages.forEach(message => {
-            // Handle both 'createdAt' and 'timestamp' fields from backend
-            const messageDate = (message as any).createdAt || message.timestamp || new Date();
-            const date = new Date(messageDate).toDateString();
-
-            if (!grouped[date]) {
-                grouped[date] = [];
-            }
-            grouped[date].push(message);
-        });
-
-        // Sort dates chronologically (oldest first)
-        const sortedDates = Object.keys(grouped).sort((a, b) =>
-            new Date(a).getTime() - new Date(b).getTime()
-        );
-
-        // Return sorted object
-        const sortedGrouped: { [key: string]: any[] } = {};
-        sortedDates.forEach(date => {
-            // Sort messages within each date by timestamp (oldest first)
-            sortedGrouped[date] = grouped[date].sort((a, b) => {
-                const timeA = new Date((a as any).createdAt || a.timestamp).getTime();
-                const timeB = new Date((b as any).createdAt || b.timestamp).getTime();
-                return timeA - timeB;
-            });
-        });
-
-        return sortedGrouped;
-    };
-
-    const formatDate = (date: Date) => {
-        const today = new Date();
-        const messageDate = new Date(date);
-
-        if (messageDate.toDateString() === today.toDateString()) {
-            return 'Today';
-        }
-
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        if (messageDate.toDateString() === yesterday.toDateString()) {
-            return 'Yesterday';
-        }
-
-        return messageDate.toLocaleDateString();
-    };
-
     return (
         <div className="w-full h-full flex flex-col bg-white">
-            {/* Custom styles for hiding scrollbar */}
             <style jsx>{`
         .messages-container {
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* Internet Explorer 10+ */
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
         .messages-container::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
+          display: none;
         }
       `}</style>
 
-            {/* Chat Header */}
             <ChatHeader
                 avatar={room.avatarInfo.type === 'image' ? room.avatarInfo.value : '/icons/chat.svg'}
                 name={roomName}
@@ -396,13 +244,11 @@ const GroupChat = ({
                 onBack={onBack}
             />
 
-            {/* Messages Area */}
             <div
                 className="flex-1 overflow-y-auto p-4 bg-gray-50 messages-container"
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
             >
-                {/* Loading indicator for more messages */}
                 {isLoadingMore && (
                     <div className="flex justify-center py-4">
                         <div className="flex items-center space-x-2 text-gray-500">
@@ -412,7 +258,6 @@ const GroupChat = ({
                     </div>
                 )}
 
-                {/* Main loading state */}
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-full">
                         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-3" />
@@ -439,11 +284,9 @@ const GroupChat = ({
                         </div>
                     </div>
                 ) : (
-                    /* Messages grouped by date */
                     <div className="space-y-6">
                         {Object.entries(groupMessagesByDate()).map(([date, dayMessages]) => (
                             <div key={date} className="space-y-3">
-                                {/* Date separator */}
                                 <div className="flex justify-center">
                                     <div className="px-3 py-1 bg-white rounded-full shadow-sm border border-gray-200">
                                         <span className="text-xs font-medium text-gray-600">
@@ -451,8 +294,6 @@ const GroupChat = ({
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* Messages for this date */}
                                 <div className="space-y-2">
                                     {dayMessages.map((message, index) => {
                                         const transformedMessage = transformMessageForUI(message, index);
@@ -473,7 +314,6 @@ const GroupChat = ({
                     </div>
                 )}
 
-                {/* Invisible element to scroll to */}
                 <div ref={messagesEndRef} />
             </div>
 

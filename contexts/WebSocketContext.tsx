@@ -21,23 +21,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     // Always prefer user.userId, fallback to user.id only if userId is missing
     const userId = user?.userId || user?.id;
 
-    console.log("🔍 WebSocket auth state changed:", {
-      isAuthenticated,
-      userId,
-      isConnected: webSocket.isConnected,
-      connectionStatus: webSocket.connectionStatus,
-    });
-
     if (
       isAuthenticated &&
       userId &&
       !webSocket.isConnected &&
       webSocket.connectionStatus !== "connecting"
     ) {
-      console.log("🔌 Auto-connecting WebSocket for user:", userId);
       webSocket.connect(userId);
     } else if (!isAuthenticated && webSocket.isConnected) {
-      console.log("🔌 Auto-disconnecting WebSocket - user not authenticated");
       webSocket.disconnect();
     }
   }, [
@@ -51,11 +42,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Listen for custom auth events separately
   useEffect(() => {
     const handleAuthEvent = (e: CustomEvent) => {
-      console.log("🔍 Auth event received in WebSocket context");
       if (e.detail?.type === "login" && e.detail?.user) {
         const loginUserId = e.detail.user.id || e.detail.user.userId;
         if (loginUserId && !webSocket.isConnected) {
-          console.log("🔌 Connecting WebSocket after login event");
           webSocket.connect(loginUserId);
         }
       }
