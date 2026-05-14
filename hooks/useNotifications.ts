@@ -1,72 +1,411 @@
-// hooks/useNotifications.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { toast } from "@/components/CustomToast";
-// Define AnnouncementResponse type inline or import from types if available
-interface Notification {
-  _id: string;
-  title: string;
-  content: string;
-  createdBy: string;
-  senderId: string;
-  attachment?: string;
-  targetAudience: string[];
-  schoolId: string;
-  status: string;
-  reactions: Record<string, number>;
-  userReactions: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-  // ...other fields
-}
-
-interface NotificationResponse {
-  data: Notification[];
-  meta: {
-    total: number;
-    page: number;
-    lastPage: number;
-    limit: number;
-  };
-}
 import { notificationService } from "@/services/notification.service";
 
-export const useNotifications = (page: number = 1, limit: number = 10) => {
-  const { accessToken, isAuthenticated, user } = useAuthContext();
-  const [notifications, setNotifications] =
-    useState<NotificationResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export type NotificationSource = "school" | "talim" | "system";
 
-  const fetchAnnouncements = async () => {
-    if (!isAuthenticated || !accessToken || !user?.userId) {
-      toast.error("User not authenticated");
-      setIsLoading(false);
+export type NotificationCategory =
+  | "announcement"
+  | "attendance"
+  | "academics"
+  | "grading"
+  | "resources"
+  | "messages"
+  | "account"
+  | "other";
+
+export type StudentNotification = {
+  id: string;
+  rawId: string;
+  source: NotificationSource;
+  sourceLabel: string;
+  category: NotificationCategory;
+  title: string;
+  message: string;
+  createdAt: string;
+  unread: boolean;
+  senderName: string;
+  senderEmail?: string;
+  attachments: string[];
+  related: Array<{ label: string; href?: string }>;
+  priority?: "low" | "medium" | "high";
+  metadata?: Record<string, any>;
+  endpoint: "announcement" | "notification";
+};
+
+const getUserId = (user: any): string => {
+  if (!user) return "";
+  return user.userId || user._id || user.id || "";
+};
+
+const getNotificationItems = (payload: any): any[] => {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.announcements)) return payload.announcements;
+  if (Array.isArray(payload)) return payload;
+  return [];
+};
+
+const getPersonName = (person: any, fallback = "System Notification") => {
+  if (!person) return fallback;
+  if (typeof person === "string") return fallback;
+  if (person.name) return person.name;
+  const name = [person.firstName, person.lastName].filter(Boolean).join(" ");
+  return name || person.email || fallback;
+};
+
+const isMissingSenderName = (value?: string) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return !normalized || normalized === "unknown sender" || normalized === "unknown";
+};
+
+const getSenderName = (item: any, sender: any, fallback = "System Notification") =>
+  !isMissingSenderName(item.senderName)
+    ? item.senderName
+    : !isMissingSenderName(item.senderDisplay?.name)
+      ? item.senderDisplay.name
+      : getPersonName(sender, fallback);
+
+const getSenderEmail = (item: any, sender: any) =>
+  item.senderEmail || item.senderDisplay?.email || sender?.email;
+
+const hasReadByUser = (readBy: any, userId: string) => {
+  if (!Array.isArray(readBy)) return false;
+  return readBy.some((reader: any) => getUserId(reader) === userId);
+};
+
+const getTextBlob = (item: any) =>
+  [
+    item?.type,
+    item?.title,
+    item?.message,
+    item?.content,
+    item?.metadata?.category,
+    item?.metadata?.module,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const inferCategory = (item: any, fallback: NotificationCategory) => {
+  const explicit = String(
+    item?.category || item?.type || item?.metadata?.category || item?.metadata?.module || "",
+  ).toLowerCase();
+  const text = `${explicit} ${getTextBlob(item)}`;
+
+  if (text.includes("attendance") || text.includes("absence") || text.includes("absent") || text.includes("late")) {
+    return "attendance";
+  }
+  if (text.includes("grade") || text.includes("grading") || text.includes("result") || text.includes("report")) {
+    return "grading";
+  }
+  if (text.includes("assessment") || text.includes("assignment") || text.includes("curriculum") || text.includes("academic")) {
+    return "academics";
+  }
+  if (text.includes("resource") || text.includes("material") || text.includes("pdf") || text.includes("e-library")) {
+    return "resources";
+  }
+  if (text.includes("chat") || text.includes("message")) {
+    return "messages";
+  }
+  if (text.includes("account") || text.includes("password") || text.includes("login") || text.includes("security")) {
+    return "account";
+  }
+  if (text.includes("announcement")) {
+    return "announcement";
+  }
+
+  return fallback;
+};
+
+const toAttachments = (item: any) => {
+  const attachments = [
+    ...(Array.isArray(item?.attachments) ? item.attachments : []),
+    ...(item?.attachment ? [item.attachment] : []),
+  ];
+  return attachments.filter(Boolean);
+};
+
+const buildRelated = (item: any) => {
+  const metadata = item?.metadata || {};
+  const related: Array<{ label: string; href?: string }> = [];
+
+  if (metadata.className) related.push({ label: metadata.className });
+  if (metadata.courseName) related.push({ label: metadata.courseName });
+  if (metadata.resourceTitle) related.push({ label: metadata.resourceTitle, href: metadata.resourceUrl });
+  if (metadata.assignmentTitle) related.push({ label: metadata.assignmentTitle, href: metadata.assignmentUrl });
+  if (metadata.href || metadata.url) {
+    related.push({ label: "Open related item", href: metadata.href || metadata.url });
+  }
+
+  return related;
+};
+
+const normalizeAnnouncement = (item: any, userId: string): StudentNotification => {
+  const sender = item.senderId || item.createdBy;
+  const schoolName =
+    item.schoolName ||
+    item.school?.name ||
+    item.schoolId?.name ||
+    item.metadata?.schoolName ||
+    "School Admin";
+  const createdAt = item.publishedAt || item.createdAt || item.scheduledFor || new Date().toISOString();
+  const isRead =
+    typeof item.isRead === "boolean" ? item.isRead : hasReadByUser(item.readBy, userId);
+
+  return {
+    id: `announcement:${item._id || item.id}`,
+    rawId: item._id || item.id,
+    source: item.source || "school",
+    sourceLabel: item.sourceLabel || "School Announcement",
+    category: inferCategory(item, "announcement"),
+    title: item.title || "School announcement",
+    message: item.message || item.content || "No message provided.",
+    createdAt,
+    unread: !isRead,
+    senderName: getSenderName(item, sender, schoolName),
+    senderEmail: getSenderEmail(item, sender),
+    attachments: toAttachments(item),
+    related: buildRelated(item),
+    priority: item.priority,
+    metadata: item.metadata,
+    endpoint: "announcement",
+  };
+};
+
+const normalizeSystemNotification = (item: any, userId: string): StudentNotification => {
+  const sender = item.senderId || item.sender || item.createdBy;
+  const isRead =
+    typeof item.isRead === "boolean"
+      ? item.isRead
+      : typeof item.read === "boolean"
+        ? item.read
+        : hasReadByUser(item.readBy, userId);
+  const source = item.source || item.metadata?.source;
+  const normalizedSource: NotificationSource =
+    source === "school" ? "school" : source === "talim" ? "talim" : "system";
+  const senderFallback =
+    normalizedSource === "talim"
+      ? "Talim Admin"
+      : normalizedSource === "school"
+        ? "School Admin"
+        : "System Notification";
+
+  return {
+    id: `notification:${item._id || item.id}`,
+    rawId: item._id || item.id,
+    source: normalizedSource,
+    sourceLabel:
+      item.sourceLabel ||
+      (normalizedSource === "talim"
+        ? "Talim Alert"
+        : normalizedSource === "school"
+          ? "School Notification"
+          : "System Notification"),
+    category: inferCategory(item, "other"),
+    title: item.title || "Notification",
+    message: item.message || item.body || item.content || "No message provided.",
+    createdAt: item.createdAt || new Date().toISOString(),
+    unread: !isRead,
+    senderName: getSenderName(item, sender, senderFallback),
+    senderEmail: getSenderEmail(item, sender),
+    attachments: toAttachments(item),
+    related: buildRelated(item),
+    priority: item.priority,
+    metadata: item.metadata,
+    endpoint: "notification",
+  };
+};
+
+const sortByNewest = (items: StudentNotification[]) =>
+  [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+const isSchoolAnnouncementNotification = (item: any) => {
+  const source = item.source || item.metadata?.source;
+  const category = item.category || item.metadata?.category;
+  const type = String(item.type || "").toLowerCase();
+  return (
+    source === "school" &&
+    (category === "announcement" ||
+      type.includes("announcement") ||
+      Boolean(item.metadata?.announcementId))
+  );
+};
+
+export const useNotifications = () => {
+  const { accessToken, isAuthenticated, user } = useAuthContext();
+  const [notifications, setNotifications] = useState<StudentNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const userId = getUserId(user);
+  const cacheKey = userId ? `student-notifications:${userId}` : "";
+
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated || !accessToken) {
+      setNotifications([]);
+      setError("You need to sign in to view notifications.");
+      setLoading(false);
+      return;
+    }
+
+    if (!userId) {
+      setNotifications([]);
+      setError(null);
+      setLoading(false);
       return;
     }
 
     try {
-      setIsLoading(true);
-      const data = await notificationService.getAnnouncements(
-        accessToken,
-        user.userId,
-        page,
-        limit
-      );
-      setNotifications(data);
+      setLoading(true);
+      setError(null);
+
+      const cachedNotifications = cacheKey ? localStorage.getItem(cacheKey) : null;
+      if (cachedNotifications) {
+        setNotifications(JSON.parse(cachedNotifications));
+      }
+
+      const [announcementsResponse, notificationsResponse] = await Promise.allSettled([
+        notificationService.getAnnouncements(accessToken, userId, 1, 50),
+        notificationService.getNotifications(accessToken, {
+          recipientId: userId,
+          page: 1,
+          limit: 50,
+        }),
+      ]);
+
+      const normalized: StudentNotification[] = [];
+
+      if (announcementsResponse.status === "fulfilled") {
+        normalized.push(
+          ...getNotificationItems(announcementsResponse.value).map((item) =>
+            normalizeAnnouncement(item, userId),
+          ),
+        );
+      }
+
+      if (notificationsResponse.status === "fulfilled") {
+        normalized.push(
+          ...getNotificationItems(notificationsResponse.value)
+            .filter((item) => !isSchoolAnnouncementNotification(item))
+            .map((item) => normalizeSystemNotification(item, userId)),
+        );
+      }
+
+      if (announcementsResponse.status === "rejected" && notificationsResponse.status === "rejected") {
+        throw new Error("Failed to load notifications.");
+      }
+
+      const nextNotifications = sortByNewest(normalized);
+      setNotifications(nextNotifications);
+      if (cacheKey) {
+        localStorage.setItem(cacheKey, JSON.stringify(nextNotifications));
+      }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to load announcements";
-      toast.error(errorMessage);
+      console.error("Failed to fetch notifications:", error);
+      setError("Failed to load notifications. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }, [accessToken, cacheKey, isAuthenticated, userId]);
 
   useEffect(() => {
-    fetchAnnouncements();
-  }, [accessToken, isAuthenticated, user?.userId, page, limit]);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 1000 * 60 * 5);
 
-  return { notifications: notifications, isLoading };
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const persistNotifications = useCallback(
+    (nextNotifications: StudentNotification[]) => {
+      setNotifications(nextNotifications);
+      if (cacheKey) {
+        localStorage.setItem(cacheKey, JSON.stringify(nextNotifications));
+      }
+    },
+    [cacheKey],
+  );
+
+  const markAsRead = useCallback(
+    async (notificationId: string) => {
+      const target = notifications.find((notification) => notification.id === notificationId);
+      if (!target || !target.unread || !userId || !accessToken) return;
+
+      const nextNotifications = notifications.map((notification) =>
+        notification.id === notificationId ? { ...notification, unread: false } : notification,
+      );
+      persistNotifications(nextNotifications);
+
+      try {
+        if (target.endpoint === "announcement") {
+          await notificationService.markAnnouncementAsRead(accessToken, target.rawId, userId);
+        } else {
+          await notificationService.markNotificationAsRead(accessToken, target.rawId, userId);
+        }
+        await fetchNotifications();
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+        persistNotifications(notifications);
+        setError("Failed to mark notification as read. Please try again.");
+      }
+    },
+    [accessToken, fetchNotifications, notifications, persistNotifications, userId],
+  );
+
+  const markAllAsRead = useCallback(async () => {
+    const unreadNotifications = notifications.filter((notification) => notification.unread);
+    if (!unreadNotifications.length || !userId || !accessToken) return;
+
+    persistNotifications(notifications.map((notification) => ({ ...notification, unread: false })));
+
+    const results = await Promise.allSettled(
+      unreadNotifications.map((notification) =>
+        notification.endpoint === "announcement"
+          ? notificationService.markAnnouncementAsRead(accessToken, notification.rawId, userId)
+          : notificationService.markNotificationAsRead(accessToken, notification.rawId, userId),
+      ),
+    );
+
+    if (results.some((result) => result.status === "rejected")) {
+      persistNotifications(notifications);
+      setError("Some notifications could not be marked as read. Please try again.");
+      return;
+    }
+
+    await fetchNotifications();
+  }, [accessToken, fetchNotifications, notifications, persistNotifications, userId]);
+
+  const counts = useMemo(() => {
+    return notifications.reduce(
+      (acc, notification) => {
+        acc.all += 1;
+        if (notification.unread) acc.unread += 1;
+        acc[notification.category] = (acc[notification.category] || 0) + 1;
+        return acc;
+      },
+      {
+        all: 0,
+        unread: 0,
+        announcement: 0,
+        attendance: 0,
+        academics: 0,
+        grading: 0,
+        resources: 0,
+        messages: 0,
+        account: 0,
+        other: 0,
+      } as Record<NotificationCategory | "all" | "unread", number>,
+    );
+  }, [notifications]);
+
+  return {
+    notifications,
+    loading,
+    error,
+    counts,
+    refetch: fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  };
 };
