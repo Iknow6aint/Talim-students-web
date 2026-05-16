@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
-  if (token && (path === "/" || path === "/signin")) {
+  if (token && path === "/") {
     return NextResponse.redirect(new URL("/onboarding", request.url));
   }
 

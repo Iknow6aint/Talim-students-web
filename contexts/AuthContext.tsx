@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { destroyCookie, parseCookies, setCookie } from "nookies";
 import { User } from "@/types/auth";
+import { authService } from "@/services/auth.service";
 
 interface AuthContextType {
   user: User | null;
@@ -43,8 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      // Check localStorage first (primary storage for students app)
-      const userStr = localStorage.getItem("user");
       let token = localStorage.getItem("accessToken");
 
       // Fallback to cookies if no token in localStorage
@@ -53,18 +52,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token = cookies.access_token;
       }
 
-      if (token && userStr) {
+      const persistValidatedSession = async (nextToken: string) => {
+        const introspectResponse = await authService.introspect(nextToken);
+        const userData = introspectResponse.user as User;
+
+        localStorage.setItem("accessToken", nextToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+        setCookie(null, "access_token", nextToken, {
+          maxAge: 30 * 24 * 60 * 60,
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+        setAuthState(userData, nextToken);
+      };
+
+      if (token) {
         try {
-          const userData = JSON.parse(userStr) as User;
-          setAuthState(userData, token);
+          await persistValidatedSession(token);
           return true;
         } catch (error) {
-          console.error("Failed to parse user data:", error);
-          localStorage.removeItem("user");
-          localStorage.removeItem("accessToken");
+          console.warn("Stored access token validation failed:", error);
         }
       }
 
+      try {
+        const refreshResponse = await authService.refresh();
+        await persistValidatedSession(refreshResponse.access_token);
+        return true;
+      } catch (error) {
+        console.warn("Session refresh failed:", error);
+      }
+
+      localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      destroyCookie(null, "access_token");
+      destroyCookie(null, "refresh_token");
       setAuthState(null, null);
       return false;
     } catch (error) {

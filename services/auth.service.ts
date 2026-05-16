@@ -39,4 +39,22 @@ export const authService = {
 
     return response.json();
   },
+
+  refresh: async (): Promise<Pick<LoginResponse, 'access_token'>> => {
+    const response = await fetch(API_ENDPOINTS.REFRESH, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Token refresh failed');
+    }
+
+    return response.json();
+  },
 };
