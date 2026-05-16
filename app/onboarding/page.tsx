@@ -25,7 +25,13 @@ const UPLOAD_PRESET = "presetOne";
 
 export default function StudentOnboardingPhase1() {
   const router = useRouter();
-  const { user, accessToken, setAuthState } = useAuthContext();
+  const {
+    user,
+    accessToken,
+    setAuthState,
+    isAuthenticated,
+    isLoading: authLoading,
+  } = useAuthContext();
   const { isHydrated, phase1Completed, isFullyComplete, completePhase1 } =
     useStudentOnboarding();
   const { academicData, loading: academicLoading } = useAcademicDetails();
@@ -37,13 +43,24 @@ export default function StudentOnboardingPhase1() {
 
   // Redirect if already done
   useEffect(() => {
-    if (!isHydrated) return;
+    if (authLoading || !isHydrated) return;
+    if (!isAuthenticated) {
+      router.replace("/signin");
+      return;
+    }
     if (isFullyComplete) {
       router.replace("/dashboard");
     } else if (phase1Completed) {
       router.replace("/onboarding/setup");
     }
-  }, [isHydrated, phase1Completed, isFullyComplete, router]);
+  }, [
+    authLoading,
+    isAuthenticated,
+    isHydrated,
+    phase1Completed,
+    isFullyComplete,
+    router,
+  ]);
 
   // Pre-fill values from auth context
   useEffect(() => {
@@ -120,7 +137,7 @@ export default function StudentOnboardingPhase1() {
     router.push("/onboarding/setup");
   };
 
-  if (!isHydrated || academicLoading) {
+  if (authLoading || !isHydrated || academicLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />

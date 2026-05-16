@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ?.accessToken;
       if (token) {
         setAccessToken(token);
-        setIsAuthenticated(!!user);
+        setIsAuthenticated(!!localStorage.getItem("user"));
       }
     };
 
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("auth-token-refreshed", handleTokenRefresh);
       window.removeEventListener("auth-refresh-failed", handleRefreshFailure);
     };
-  }, [router, user]);
+  }, [router]);
 
   return (
     <AuthContext.Provider

@@ -99,6 +99,12 @@ export const useAcademicDetails = () => {
   useEffect(() => {
     if (user?.userId && accessToken && !authLoading) {
       fetchAcademicDetails();
+      return;
+    }
+
+    if (!authLoading && (!user?.userId || !accessToken)) {
+      setAcademicData(null);
+      setLoading(false);
     }
   }, [user?.userId, accessToken, authLoading, fetchAcademicDetails]);
 
