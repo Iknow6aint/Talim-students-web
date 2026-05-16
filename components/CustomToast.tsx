@@ -194,9 +194,11 @@ class ToastManager {
   private listeners: Set<(toasts: ToastProps[]) => void> = new Set();
   private toasts: ToastProps[] = [];
 
-  subscribe(listener: (toasts: ToastProps[]) => void) {
+  subscribe(listener: (toasts: ToastProps[]) => void): () => void {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   getSnapshot() {

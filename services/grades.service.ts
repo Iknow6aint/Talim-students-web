@@ -50,6 +50,40 @@ export interface StudentCumulativeGrade {
   isActive: boolean;
 }
 
+export interface StudentKPIData {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  userAvatar?: string;
+  classInfo: {
+    id: string;
+    name: string;
+  };
+  subjectsEnrolled: number;
+  gradeScore: number;
+  attendanceRate?: number;
+  attendancePercentage: number;
+  currentTerm?: {
+    id: string;
+    name: string;
+  };
+  gradeLevel?: string;
+  completedAssessments?: number;
+  classPosition?: number;
+  totalStudentsInClass?: number;
+  additionalMetrics: {
+    totalAssessments: number;
+    completedAssessments: number;
+    currentTerm: {
+      id: string;
+      name: string;
+    };
+    classRank: number;
+    totalStudentsInClass: number;
+  };
+}
+
 function extractArray<T>(json: unknown): T[] {
   if (Array.isArray(json)) return json as T[];
   if (json && typeof json === "object") {
@@ -79,6 +113,55 @@ async function apiFetch<T>(url: string, accessToken: string): Promise<T> {
 }
 
 export const gradesService = {
+  /** Dashboard KPI metrics for a student */
+  getStudentKPIs: async (
+    studentId: string,
+    accessToken: string
+  ): Promise<StudentKPIData> => {
+    const json = await apiFetch<Partial<StudentKPIData>>(
+      `${API_BASE_URL}/students/${studentId}/dashboard/kpis`,
+      accessToken
+    );
+
+    const attendancePercentage =
+      json.attendancePercentage ?? json.attendanceRate ?? 0;
+    const currentTerm = json.currentTerm ?? json.additionalMetrics?.currentTerm ?? {
+      id: "",
+      name: "Unknown Term",
+    };
+    const completedAssessments =
+      json.completedAssessments ?? json.additionalMetrics?.completedAssessments ?? 0;
+    const classPosition =
+      json.classPosition ?? json.additionalMetrics?.classRank ?? 0;
+    const totalStudentsInClass =
+      json.totalStudentsInClass ??
+      json.additionalMetrics?.totalStudentsInClass ??
+      0;
+
+    return {
+      ...json,
+      studentId: json.studentId ?? studentId,
+      firstName: json.firstName ?? "",
+      lastName: json.lastName ?? "",
+      email: json.email ?? "",
+      classInfo: json.classInfo ?? { id: "", name: "" },
+      subjectsEnrolled: json.subjectsEnrolled ?? 0,
+      gradeScore: json.gradeScore ?? 0,
+      attendancePercentage,
+      currentTerm,
+      completedAssessments,
+      classPosition,
+      totalStudentsInClass,
+      additionalMetrics: {
+        totalAssessments: json.additionalMetrics?.totalAssessments ?? completedAssessments,
+        completedAssessments,
+        currentTerm,
+        classRank: classPosition,
+        totalStudentsInClass,
+      },
+    };
+  },
+
   /** All course grade records for the authenticated student in a given term */
   getCourseGradesByTerm: async (
     termId: string,
