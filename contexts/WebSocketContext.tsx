@@ -43,7 +43,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   useEffect(() => {
     const handleAuthEvent = (e: CustomEvent) => {
       if (e.detail?.type === "login" && e.detail?.user) {
-        const loginUserId = e.detail.user.id || e.detail.user.userId;
+        const loginUserId = e.detail.user.userId || e.detail.user.id;
         if (loginUserId && !webSocket.isConnected) {
           webSocket.connect(loginUserId);
         }

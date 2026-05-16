@@ -16,6 +16,37 @@ export interface RealtimeChatRoom extends ChatRoomData {
   lastSeen?: Date;
 }
 
+function getPersonData(person: any) {
+  return person?._doc || person || {};
+}
+
+function getPersonId(person: any) {
+  const data = getPersonData(person);
+  return data.userId || data._id || data.id || person?.userId || person?._id || person?.id || "";
+}
+
+function getPersonName(person: any, fallback = "Unknown User") {
+  const data = getPersonData(person);
+  const fullName = `${data.firstName || person?.firstName || ""} ${
+    data.lastName || person?.lastName || ""
+  }`.trim();
+  return fullName || data.name || person?.name || data.email || person?.email || fallback;
+}
+
+function getPersonAvatar(person: any) {
+  const data = getPersonData(person);
+  return data.userAvatar || data.avatar || person?.userAvatar || person?.avatar || "";
+}
+
+function getMessageSenderId(sender: any) {
+  if (sender && typeof sender === "object") return getPersonId(sender);
+  return typeof sender === "string" ? sender : "";
+}
+
+function findParticipant(participants: any[] = [], id: string) {
+  return participants.find((participant) => getPersonId(participant) === id);
+}
+
 interface UseRealtimeChatReturn {
   chatRooms: RealtimeChatRoom[];
   isLoading: boolean;
@@ -138,30 +169,33 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
         }
 
         case "one_to_one": {
+          const currentUserId = user?.userId || user?.id || (user as any)?._id;
           const otherParticipant = room.participants.find(
-            (p) => p.userId !== user?.id && p.userId !== user?.userId
+            (p) => getPersonId(p) !== currentUserId
           );
 
           if (otherParticipant) {
-            displayName =
-              `${otherParticipant.firstName || ""} ${
-                otherParticipant.lastName || ""
-              }`.trim() || "Unknown User";
-            isOnline = otherParticipant.isOnline || false;
+            const otherId = getPersonId(otherParticipant);
+            const otherAvatar = getPersonAvatar(otherParticipant);
+            displayName = getPersonName(otherParticipant);
+            isOnline = Boolean(getPersonData(otherParticipant).isOnline || otherParticipant.isOnline);
 
-            if (otherParticipant.userAvatar) {
+            if (otherAvatar) {
               avatarInfo = {
                 type: "image",
-                value: otherParticipant.userAvatar,
+                value: otherAvatar,
               };
             } else {
-              const initials = `${otherParticipant.firstName?.[0] || ""}${
-                otherParticipant.lastName?.[0] || ""
-              }`.toUpperCase();
+              const initials = displayName
+                .split(" ")
+                .map((word) => word[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase();
               avatarInfo = {
                 type: "initials",
                 value: initials || "U",
-                bgColor: generateColorFromString(displayName),
+                bgColor: generateColorFromString(otherId || displayName),
               };
             }
           }
@@ -171,10 +205,19 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
 
       // Normalise lastMessage — backend may send 'text' instead of 'content'
       let transformedLastMessage = room.lastMessage;
-      if (room.lastMessage && (room.lastMessage as any).text) {
+      if (room.lastMessage) {
+        const senderId = getMessageSenderId(room.lastMessage.senderId);
+        const participant = findParticipant(room.participants, senderId);
         transformedLastMessage = {
           ...room.lastMessage,
-          content: (room.lastMessage as any).text,
+          content: (room.lastMessage as any).text || room.lastMessage.content,
+          timestamp:
+            room.lastMessage.timestamp || (room.lastMessage as any).createdAt,
+          senderId,
+          senderName:
+            room.lastMessage.senderName ||
+            (participant ? getPersonName(participant, "Unknown") : "Unknown"),
+          type: room.lastMessage.type || "text",
         };
       }
 
@@ -332,7 +375,12 @@ export const useRealtimeChat = (): UseRealtimeChatReturn => {
       }
 
       if (type === "groups") {
-        return chatRooms.filter((room) => room.type === "group");
+        return chatRooms.filter(
+          (room) =>
+            room.type === "group" ||
+            room.type === "class_group" ||
+            room.type === "course_group"
+        );
       }
 
       return chatRooms;

@@ -5,6 +5,14 @@ import { useWebSocketContextSafe } from '@/contexts/WebSocketContext';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ChatMessage, ChatRoomJoinedData, FetchMessagesData } from './useWebSocket';
 
+function getSenderId(sender: any) {
+  if (sender && typeof sender === "object") {
+    const data = sender._doc || sender;
+    return data.userId || data._id || data.id || "";
+  }
+  return typeof sender === "string" ? sender : "";
+}
+
 interface UseRoomMessagesReturn {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -39,6 +47,7 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
   
   const { user } = useAuthContext();
   const mountedRef = useRef(true);
+  const currentUserId = user?.userId || user?.id || (user as any)?._id;
   
   // Called unconditionally — returns null when used outside a WebSocketProvider.
   const webSocketContext = useWebSocketContextSafe();
@@ -88,23 +97,28 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
         totalParticipants: data.totalParticipants,
       });
 
-      setMessages(data.messages || []);
+      const sortedMessages = [...(data.messages || [])].sort((a: any, b: any) => {
+        const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+        const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+        return timeA - timeB;
+      });
+
+      setMessages(sortedMessages);
       setHasMore(data.hasMore || false);
       setNextCursor(data.nextCursor);
       setIsLoading(false);
       setError(null);
 
       // Bulk-mark all initial messages from others as read
-      const currentUserId = user?.id || user?.userId;
-      (data.messages || []).forEach((msg) => {
-        if (msg.senderId !== currentUserId && msg._id) {
+      sortedMessages.forEach((msg) => {
+        if (getSenderId(msg.senderId) !== currentUserId && msg._id) {
           markMessageAsRead(msg._id);
         }
       });
     });
 
     return unsubscribe;
-  }, [isConnected, roomId, onChatRoomJoined, user, markMessageAsRead]);
+  }, [isConnected, roomId, onChatRoomJoined, currentUserId, markMessageAsRead]);
 
   // Handle messages update (pagination)
   useEffect(() => {
@@ -138,8 +152,7 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
       const messageRoomId = message.roomId || (message as any).chatRoomId;
       if (!mountedRef.current || messageRoomId !== roomId) return;
 
-      const currentUserId = user?.id || user?.userId;
-      if (message.senderId !== currentUserId && message._id) {
+      if (getSenderId(message.senderId) !== currentUserId && message._id) {
         markMessageAsRead(message._id);
       }
 
@@ -152,7 +165,7 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     });
 
     return unsubscribe;
-  }, [isConnected, roomId, onChatMessage, user, markMessageAsRead]);
+  }, [isConnected, roomId, onChatMessage, currentUserId, markMessageAsRead]);
 
   // Message operations
   const sendMessage = useCallback((
@@ -165,12 +178,15 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
       return;
     }
     
-    if (!user?.id && !user?.userId) {
+    if (!currentUserId) {
       console.error('Cannot send message: no user information');
       return;
     }
     
-    const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Student';
+    const userName =
+      `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+      user?.email ||
+      'Student';
     
     const messageData = {
       content,
@@ -181,7 +197,7 @@ export const useRoomMessages = (roomId: string | null): UseRoomMessagesReturn =>
     };
     
     sendChatMessage(messageData);
-  }, [roomId, isConnected, user, sendChatMessage]);
+  }, [roomId, isConnected, user, currentUserId, sendChatMessage]);
 
   const loadMoreMessages = useCallback(() => {
     if (!roomId || !isConnected || !hasMore || isLoadingMore || !nextCursor) {

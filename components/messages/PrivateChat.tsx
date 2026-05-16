@@ -57,12 +57,20 @@ export default function PrivateChat({
     let avatar = "";
 
     if (message.senderId && typeof message.senderId === "object") {
-      senderId = message.senderId.userId || message.senderId._id || "";
-      senderName = `${message.senderId.firstName || ""} ${message.senderId.lastName || ""}`.trim();
-      avatar = message.senderId.userAvatar || "";
+      const senderData = message.senderId._doc || message.senderId;
+      senderId = senderData.userId || senderData._id || senderData.id || "";
+      senderName =
+        `${senderData.firstName || ""} ${senderData.lastName || ""}`.trim() ||
+        senderData.name ||
+        senderData.email ||
+        "";
+      avatar = senderData.userAvatar || senderData.avatar || "";
     } else if (typeof message.senderId === "string") {
       senderId = message.senderId;
-      senderName = message.senderName || message.sender || "";
+      senderName =
+        message.senderName && message.senderName !== "Unknown"
+          ? message.senderName
+          : message.sender || "";
     }
 
     const currentUserId = getCurrentUserId();
@@ -78,17 +86,34 @@ export default function PrivateChat({
     }
 
     if ((!senderName || !avatar) && room?.participants) {
-      const participant = room.participants.find(
-        (p: any) => p._id === senderId || p.userId === senderId || (p as any).id === senderId
-      );
+      const participant = room.participants.find((p: any) => {
+        const participantData = p._doc || p;
+        const participantId =
+          participantData.userId || participantData._id || participantData.id || p.userId || p._id;
+        return participantId === senderId;
+      });
       if (participant) {
+        const participantAny = participant as any;
+        const participantData = participantAny._doc || participantAny;
         if (!senderName) {
           senderName =
-            `${participant.firstName || ""} ${participant.lastName || ""}`.trim() ||
-            (participant as any).name ||
+            `${participantData.firstName || participantAny.firstName || ""} ${
+              participantData.lastName || participantAny.lastName || ""
+            }`.trim() ||
+            participantData.name ||
+            participantAny.name ||
+            participantData.email ||
+            participantAny.email ||
             "Unknown User";
         }
-        if (!avatar) avatar = participant.userAvatar || "";
+        if (!avatar) {
+          avatar =
+            participantData.userAvatar ||
+            participantData.avatar ||
+            participantAny.userAvatar ||
+            participantAny.avatar ||
+            "";
+        }
       }
     }
 
@@ -182,6 +207,35 @@ export default function PrivateChat({
     return date.toLocaleDateString();
   };
 
+  const getOtherParticipant = () => {
+    const currentUserId = user?.userId || user?.id || (user as any)?._id;
+    const participant = room?.participants?.find((p: any) => {
+      const participantData = p?._doc || p || {};
+      const participantId =
+        participantData.userId || participantData._id || participantData.id || p?.userId || p?._id;
+      return participantId && participantId !== currentUserId;
+    });
+
+    if (!participant) {
+      return {
+        avatar: "",
+        status: room?.isOnline ? "Online" : undefined,
+      };
+    }
+
+    const participantAny = participant as any;
+    const participantData = participantAny._doc || participantAny;
+    return {
+      avatar:
+        participantData.userAvatar ||
+        participantData.avatar ||
+        participantAny.userAvatar ||
+        participantAny.avatar ||
+        "",
+      status: participantData.isOnline || participantAny.isOnline ? "Online" : undefined,
+    };
+  };
+
   if (!room) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -196,12 +250,14 @@ export default function PrivateChat({
     <div className="w-full h-full flex flex-col bg-white">
       <ChatHeader
         avatar={
-          room.avatarInfo.type === "image" ? room.avatarInfo.value : ""
+          room.avatarInfo.type === "image"
+            ? room.avatarInfo.value
+            : getOtherParticipant().avatar
         }
         name={room.displayName}
-        status={room.isOnline ? "Online" : undefined}
+        status={getOtherParticipant().status}
         participants={room.participants || []}
-        currentUserId={user?.id || user?.userId}
+        currentUserId={user?.userId || user?.id || (user as any)?._id}
         onBack={onBack}
       />
 

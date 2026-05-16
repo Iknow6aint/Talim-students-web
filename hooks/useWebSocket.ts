@@ -199,6 +199,7 @@ export const useWebSocket = (): WebSocketContextType => {
 
       try {
         const socket = io(WEBSOCKET_URL, {
+          query: { userId },
           auth: { userId },
           transports: ["websocket", "polling"],
           timeout: 10000,

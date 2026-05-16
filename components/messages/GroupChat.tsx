@@ -58,13 +58,21 @@ const GroupChat = ({
         let avatar = '';
 
         if (message.senderId && typeof message.senderId === 'object') {
+            const senderData = message.senderId._doc || message.senderId;
             // Prefer userId over _id so it aligns with auth context's user.userId
-            senderId = message.senderId.userId || message.senderId._id || '';
-            senderName = `${message.senderId.firstName || ''} ${message.senderId.lastName || ''}`.trim();
-            avatar = message.senderId.userAvatar || '';
+            senderId = senderData.userId || senderData._id || senderData.id || '';
+            senderName =
+                `${senderData.firstName || ''} ${senderData.lastName || ''}`.trim() ||
+                senderData.name ||
+                senderData.email ||
+                '';
+            avatar = senderData.userAvatar || senderData.avatar || '';
         } else if (typeof message.senderId === 'string') {
             senderId = message.senderId;
-            senderName = message.senderName || message.sender || (message as any).name || '';
+            senderName =
+                message.senderName && message.senderName !== 'Unknown'
+                    ? message.senderName
+                    : message.sender || (message as any).name || '';
         }
 
         const currentUserId = getCurrentUserId();
@@ -79,18 +87,24 @@ const GroupChat = ({
 
         // Look up participant for missing name or avatar — compare all ID fields
         if ((!senderName || senderName.trim() === '' || !avatar) && room?.participants) {
-            const participant = room.participants.find((p: any) =>
-                p._id === senderId || p.userId === senderId || (p as any).id === senderId
-            );
+            const participant = room.participants.find((p: any) => {
+                const participantData = p._doc || p;
+                const participantId = participantData.userId || participantData._id || participantData.id || p.userId || p._id;
+                return participantId === senderId;
+            });
             if (participant) {
+                const participantAny = participant as any;
+                const participantData = participantAny._doc || participantAny;
                 if (!senderName || senderName.trim() === '') {
                     senderName =
-                        `${participant.firstName || ''} ${participant.lastName || ''}`.trim() ||
-                        (participant as any).name ||
-                        (participant as any).email ||
+                        `${participantData.firstName || participantAny.firstName || ''} ${participantData.lastName || participantAny.lastName || ''}`.trim() ||
+                        participantData.name ||
+                        participantAny.name ||
+                        participantData.email ||
+                        participantAny.email ||
                         'Unknown User';
                 }
-                if (!avatar) avatar = participant.userAvatar || '';
+                if (!avatar) avatar = participantData.userAvatar || participantData.avatar || participantAny.userAvatar || participantAny.avatar || '';
             }
         }
 
@@ -145,16 +159,23 @@ const GroupChat = ({
     useEffect(() => {
         if (messages.length > 0 && isSending) {
             const lastMessage = messages[messages.length - 1];
-            const currentUserId = getCurrentUserId();
+            const currentUserId = user?.userId || (user as any)?._id || (user as any)?.id;
             if (lastMessage && currentUserId) {
-                const { senderId } = resolveSenderInfo(lastMessage);
+                const rawSender = (lastMessage as any).senderId;
+                const senderData =
+                    rawSender && typeof rawSender === 'object'
+                        ? rawSender._doc || rawSender
+                        : null;
+                const senderId = senderData
+                    ? senderData.userId || senderData._id || senderData.id || ''
+                    : rawSender || (lastMessage as any).originalSenderId || '';
                 if (senderId === currentUserId) {
                     setIsSending(false);
                 }
             }
         }
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isSending]);
+    }, [messages, isSending, user]);
 
     const handleSendMessage = useCallback(
         (content: string) => {
