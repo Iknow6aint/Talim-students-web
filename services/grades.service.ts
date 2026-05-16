@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export interface AssessmentGradeRecord {
   _id?: string;
@@ -94,10 +95,10 @@ function extractArray<T>(json: unknown): T[] {
 }
 
 async function apiFetch<T>(url: string, accessToken: string): Promise<T> {
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
+    accessToken,
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
   });

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export interface AttendanceKPIData {
   studentId: string;
@@ -57,13 +58,13 @@ export interface ClassAttendanceStatus {
 export const attendanceService = {
   getDashboard: async (schoolId: string, accessToken: string) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/attendance/dashboard/${schoolId}`,
         {
           method: "GET",
+          accessToken,
           headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
@@ -90,13 +91,13 @@ export const attendanceService = {
     accessToken: string
   ): Promise<AttendanceKPIData> => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/attendance/student/${studentId}/kpis`,
         {
           method: "GET",
+          accessToken,
           headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
         }
@@ -122,13 +123,13 @@ export const attendanceService = {
     accessToken: string
   ): Promise<ClassAttendanceStatus> => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/attendance/class/${classId}/status?date=${date}`,
         {
           method: "GET",
+          accessToken,
           headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
         }

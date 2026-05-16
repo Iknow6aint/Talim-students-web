@@ -6,6 +6,8 @@ import StudentDetails from "@/components/profile/StudentDetails";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 import { BookOpenText, ChevronLeft, UserRound, UsersRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -51,12 +53,11 @@ const Profile = () => {
       if (!cloudData.secure_url) throw new Error("Cloudinary upload failed");
       // Send to backend
       const avatarUrl = cloudData.secure_url;
-      const { API_BASE_URL } = require("@/lib/constants");
-      const apiRes = await fetch(`${API_BASE_URL}/auth/profile/avatar`, {
+      const apiRes = await authFetch(`${API_BASE_URL}/auth/profile/avatar`, {
         method: "PUT",
+        accessToken,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ avatarUrl }),
       });

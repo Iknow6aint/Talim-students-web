@@ -1,6 +1,7 @@
 "use client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 import { Resource, ResourceServices } from "@/services/resource.service";
 import { AcademicResponse } from "@/types/auth";
 import { useEffect, useState } from "react";
@@ -25,9 +26,9 @@ export const useResources = () => {
         ":userId",
         user.userId
       );
-      const studentResponse = await fetch(studentUrl, {
+      const studentResponse = await authFetch(studentUrl, {
+        accessToken,
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },

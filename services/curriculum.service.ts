@@ -1,4 +1,5 @@
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 // services/curriculum.service.ts
 export interface Course {
@@ -65,11 +66,11 @@ export interface Curriculum {
 export const curriculumService = {
   // Get all courses for the school
   getCourses: async (accessToken: string): Promise<Course[]> => {
-    const response = await fetch(API_ENDPOINTS.COURSES_BY_SCHOOL, {
+    const response = await authFetch(API_ENDPOINTS.COURSES_BY_SCHOOL, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -90,11 +91,11 @@ export const curriculumService = {
   getCoursesByClass: async (accessToken: string, classId: string): Promise<Course[]> => {
     const endpoint = API_ENDPOINTS.COURSES_BY_CLASS.replace(':classId', classId);
 
-    const response = await fetch(endpoint, {
+    const response = await authFetch(endpoint, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -113,11 +114,11 @@ export const curriculumService = {
 
   // Get all subjects for the school
   getSubjects: async (accessToken: string): Promise<Subject[]> => {
-    const response = await fetch(API_ENDPOINTS.SUBJECTS_BY_SCHOOL, {
+    const response = await authFetch(API_ENDPOINTS.SUBJECTS_BY_SCHOOL, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -137,11 +138,11 @@ export const curriculumService = {
   // Get curriculum by course ID
   getCurriculumByCourse: async (courseId: string, accessToken: string): Promise<Curriculum[]> => {
     const url = API_ENDPOINTS.CURRICULUM_BY_COURSE.replace(':courseId', courseId);
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -160,11 +161,11 @@ export const curriculumService = {
 
   // Get curriculum by ID
   getCurriculumById: async (curriculumId: string, accessToken: string): Promise<Curriculum> => {
-    const response = await fetch(`${API_ENDPOINTS.CURRICULUM_BASE}/${curriculumId}`, {
+    const response = await authFetch(`${API_ENDPOINTS.CURRICULUM_BASE}/${curriculumId}`, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -183,11 +184,11 @@ export const curriculumService = {
 
   // Get all curricula for the school
   getAllCurricula: async (accessToken: string): Promise<Curriculum[]> => {
-    const response = await fetch(API_ENDPOINTS.CURRICULUM_BASE, {
+    const response = await authFetch(API_ENDPOINTS.CURRICULUM_BASE, {
       method: 'GET',
+      accessToken,
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });

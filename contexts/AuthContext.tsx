@@ -109,9 +109,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const handleTokenRefresh = (event: Event) => {
+      const token = (event as CustomEvent<{ accessToken?: string }>).detail
+        ?.accessToken;
+      if (token) {
+        setAccessToken(token);
+        setIsAuthenticated(!!user);
+      }
+    };
+
+    const handleRefreshFailure = () => {
+      setAuthState(null, null);
+      router.push("/signin");
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+    window.addEventListener("auth-token-refreshed", handleTokenRefresh);
+    window.addEventListener("auth-refresh-failed", handleRefreshFailure);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-token-refreshed", handleTokenRefresh);
+      window.removeEventListener("auth-refresh-failed", handleRefreshFailure);
+    };
+  }, [router, user]);
 
   return (
     <AuthContext.Provider

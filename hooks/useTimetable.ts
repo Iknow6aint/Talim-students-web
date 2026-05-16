@@ -7,6 +7,7 @@ import { toast } from "@/components/CustomToast";
 import { AcademicResponse, Timetable } from "@/types/auth";
 import { timetableService } from "@/services/timetable.service";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export interface TimetableSubject {
   name: string;
@@ -53,9 +54,9 @@ export const useTimetable = () => {
         ":userId",
         user.userId
       );
-      const studentResponse = await fetch(studentUrl, {
+      const studentResponse = await authFetch(studentUrl, {
+        accessToken,
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },

@@ -2,10 +2,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { toast } from "@/components/CustomToast";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 // Re‐use your shared Resource type if you have one, otherwise:
 export interface Resource {
@@ -42,17 +42,22 @@ export function useResources() {
           ":userId",
           user.id || user.userId || ""
         );
-        const studRes = await axios.get<{ data: Array<{ classId: string }> }>(
-          studentUrl,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              Accept: "application/json",
-            },
-          }
-        );
+        const studRes = await authFetch(studentUrl, {
+          accessToken,
+          headers: {
+            Accept: "application/json",
+          },
+        });
 
-        const classId = studRes.data.data[0]?.classId;
+        if (!studRes.ok) {
+          throw new Error("Failed to fetch student data");
+        }
+
+        const studentData = (await studRes.json()) as {
+          data: Array<{ classId: string }>;
+        };
+
+        const classId = studentData.data[0]?.classId;
         if (!classId) {
           throw new Error("No active class found for this user.");
         }
@@ -62,14 +67,18 @@ export function useResources() {
           ":classId",
           classId
         );
-        const resRes = await axios.get<Resource[]>(resourcesUrl, {
+        const resRes = await authFetch(resourcesUrl, {
+          accessToken,
           headers: {
-            Authorization: `Bearer ${accessToken}`,
             Accept: "application/json",
           },
         });
 
-        setResources(resRes.data);
+        if (!resRes.ok) {
+          throw new Error("Failed to fetch resources");
+        }
+
+        setResources(await resRes.json());
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load resources";

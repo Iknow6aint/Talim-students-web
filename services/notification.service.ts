@@ -1,4 +1,5 @@
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 type NotificationQuery = {
   page?: number;
@@ -27,12 +28,12 @@ const request = async <T>(
   url: string,
   options: RequestInit = {},
 ): Promise<T> => {
-  const response = await fetch(url, {
+  const response = await authFetch(url, {
     ...options,
+    accessToken,
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
       ...(options.headers || {}),
     },
   });

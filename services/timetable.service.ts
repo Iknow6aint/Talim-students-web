@@ -1,15 +1,16 @@
 // services/timetable.service.ts
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export const timetableService = {
   getTimetableByClass: async (classId: string, accessToken: string) => {
     try {
       const url = API_ENDPOINTS.TIMETABLE_BY_CLASS.replace(":classId", classId);
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method: "GET",
+        accessToken,
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });

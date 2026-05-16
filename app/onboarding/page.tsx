@@ -18,6 +18,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useStudentOnboarding } from "@/contexts/OnboardingContext";
 import { useAcademicDetails } from "@/hooks/useAcademicDetails";
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 const CLOUD_NAME = "ddbs7m7nt";
 const UPLOAD_PRESET = "presetOne";
@@ -91,11 +92,11 @@ export default function StudentOnboardingPhase1() {
       const cloudData = await cloudRes.json();
       if (!cloudData.secure_url) throw new Error("Image upload failed");
 
-      const apiRes = await fetch(`${API_BASE_URL}/auth/profile/avatar`, {
+      const apiRes = await authFetch(`${API_BASE_URL}/auth/profile/avatar`, {
         method: "PUT",
+        accessToken,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ avatarUrl: cloudData.secure_url }),
       });

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "@/components/CustomToast";
 import { API_ENDPOINTS} from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 import { AttendanceDashboard, AcademicResponse  } from "@/types/auth";
 import { attendanceService } from "@/services/attendance.service";
 
@@ -25,11 +26,11 @@ export const useAttendance = () => {
 
       // Step 1: Fetch student ID
       const studentUrl = API_ENDPOINTS.STUDENTS_BY_USER.replace(":userId", user.userId);
-      const studentResponse = await fetch(studentUrl, {
+      const studentResponse = await authFetch(studentUrl, {
         method: "GET",
+        accessToken,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
           Accept: "application/json",
         },
       });

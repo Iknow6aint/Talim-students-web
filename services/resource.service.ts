@@ -1,5 +1,6 @@
 // services/resource.service.ts
 import { API_ENDPOINTS } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export interface Resource {
   _id: string;
@@ -82,11 +83,11 @@ export const ResourceServices = {
   getResourceDetails: async (classId: string, accessToken: string) => {
     try {
       const url = API_ENDPOINTS.RESOURCES_BY_CLASS.replace(":classId", classId);
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method: "GET",
+        accessToken,
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
       });
 

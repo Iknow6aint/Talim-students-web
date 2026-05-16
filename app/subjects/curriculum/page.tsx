@@ -19,6 +19,7 @@ import { toast } from "@/components/CustomToast";
 import html2canvas from "html2canvas";
 import { Curriculum } from "@/services/curriculum.service";
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 // ── Curriculum detail view ────────────────────────────────────────────────────
@@ -251,12 +252,12 @@ const CurriculumPage: React.FC = () => {
       } catch (e) {}
 
       try {
-        const res = await fetch(`${API_BASE_URL}/curriculum/by-course-term`, {
+        const res = await authFetch(`${API_BASE_URL}/curriculum/by-course-term`, {
           method: "POST",
+          accessToken,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
           body: JSON.stringify({ courseId, termId }),
         });

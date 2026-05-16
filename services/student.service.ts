@@ -1,13 +1,14 @@
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 // services/student.service.ts
 export const studentService = {
   getAcademicDetails: async (userId: string, accessToken: string) => {
-    const response = await fetch(`${API_BASE_URL}/students/by-user/${userId}`, {
+    const response = await authFetch(`${API_BASE_URL}/students/by-user/${userId}`, {
       method: "GET",
+      accessToken,
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
     });
 
@@ -33,11 +34,11 @@ export const studentService = {
       url.searchParams.append("termId", termId);
     }
 
-    const response = await fetch(url.toString(), {
+    const response = await authFetch(url.toString(), {
       method: "GET",
+      accessToken,
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
     });
 

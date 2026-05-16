@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCurriculum } from "@/hooks/useCurriculum";
 import { API_BASE_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 import { Course } from "@/services/curriculum.service";
 import { BookOpen, Users, Calendar, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -150,11 +151,11 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/classes/${effectiveClassId}`, {
+        const res = await authFetch(`${API_BASE_URL}/classes/${effectiveClassId}`, {
           method: "GET",
+          accessToken,
           headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
           signal: controller.signal,
         });
@@ -259,12 +260,12 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
     setFetchingCurriculumFor(courseId);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/curriculum/by-course-term`, {
+      const res = await authFetch(`${API_BASE_URL}/curriculum/by-course-term`, {
         method: "POST",
+        accessToken,
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ courseId, termId }),
       });
