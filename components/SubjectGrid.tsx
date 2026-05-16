@@ -352,7 +352,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
 
   return (
     <div className="px-6 py-4 h-full">
-      <div className="mb-6">
+      <div className="mb-6" data-guide="subjects-header">
         <h2 className="text-2xl font-medium mb-2 text-[#030E18]">Subjects</h2>
         <p className="text-gray-600">
           Explore your course curriculum and materials
@@ -360,7 +360,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       </div>
 
       {/* Search */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4" data-guide="subjects-search">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
@@ -374,7 +374,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       </div>
 
       {/* Results count */}
-      <div className="mb-4">
+      <div className="mb-4" data-guide="subjects-count">
         <p className="text-sm text-gray-600">
           Showing {filteredCourses.length} of {classData?.courses.length || 0}{" "}
           courses
@@ -382,7 +382,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-guide="subjects-grid">
         {filteredCourses.map((course) => {
           // normalize nested id fields if backend returns plain ids
           const normalizedCourse: Course = {

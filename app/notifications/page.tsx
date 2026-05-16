@@ -252,6 +252,7 @@ function NotificationsPage() {
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_430px]">
             <section
+              data-guide="notifications-list"
               className={cn(
                 "min-h-0 rounded-2xl border border-[#E5EAF2] bg-white shadow-sm",
                 mobileDetailOpen && selectedNotification ? "hidden lg:flex" : "flex",
@@ -260,7 +261,7 @@ function NotificationsPage() {
             >
               <Tabs activeTab={activeTab} counts={counts} onTabChange={setActiveTab} />
 
-              <div className="flex flex-col gap-3 border-b border-[#E8EDF5] p-4 md:flex-row">
+              <div className="flex flex-col gap-3 border-b border-[#E8EDF5] p-4 md:flex-row" data-guide="notifications-search-sort">
                 <div className="flex h-11 flex-1 items-center rounded-xl border border-[#DCE5F2] bg-white px-3 transition focus-within:border-[#003366] focus-within:ring-4 focus-within:ring-[#003366]/10">
                   <Search className="mr-2 h-4 w-4 text-[#738195]" />
                   <Input
@@ -314,6 +315,7 @@ function NotificationsPage() {
             </section>
 
             <section
+              data-guide="notifications-detail"
               className={cn(
                 "min-h-0 rounded-2xl border border-[#E5EAF2] bg-white shadow-sm lg:flex",
                 mobileDetailOpen && selectedNotification ? "flex" : "hidden",
@@ -345,7 +347,7 @@ function Header({
   onMarkAllAsRead: () => void;
 }) {
   return (
-    <header className="flex flex-col gap-4 rounded-2xl border border-[#E5EAF2] bg-white px-4 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+    <header className="flex flex-col gap-4 rounded-2xl border border-[#E5EAF2] bg-white px-4 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between" data-guide="notifications-header">
       <div>
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#003366] text-white shadow-sm shadow-[#003366]/20">
@@ -400,7 +402,7 @@ function Tabs({
   onTabChange: (tab: TabKey) => void;
 }) {
   return (
-    <div className="overflow-x-auto border-b border-[#E8EDF5] p-3">
+    <div className="overflow-x-auto border-b border-[#E8EDF5] p-3" data-guide="notifications-tabs">
       <div className="grid min-w-[680px] grid-cols-6 rounded-xl border border-[#E5EAF2] bg-[#F8FAFD] p-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;

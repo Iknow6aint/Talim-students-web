@@ -209,6 +209,7 @@ export default function PrivateChat({
         className="flex-1 overflow-y-auto p-4 bg-gray-50"
         ref={messagesContainerRef}
         onScroll={handleScroll}
+        data-guide="messages-body"
       >
         {isLoadingMore && (
           <div className="flex justify-center py-4">

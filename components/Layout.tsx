@@ -2,6 +2,7 @@
 import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import { Header } from "./header";
+import AppGuide from "./onboarding/AppGuide";
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ function Layout({ children }: LayoutProps) {
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="flex-1 h-full overflow-y-auto">{children}</div>
       </div>
+      <AppGuide />
     </div>
   );
 }

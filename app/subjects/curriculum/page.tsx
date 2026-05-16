@@ -59,7 +59,7 @@ const CurriculumView: React.FC<CurriculumViewProps> = ({
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           {/* Top bar */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4" data-guide="curriculum-detail-actions">
             <button
               onClick={onBack}
               className="flex items-center gap-2 text-[#6F6F6F] hover:text-[#030E18] transition-colors"
@@ -80,6 +80,7 @@ const CurriculumView: React.FC<CurriculumViewProps> = ({
           <div
             ref={contentRef}
             className="bg-white rounded-2xl border border-[#F0F0F0] p-8"
+            data-guide="curriculum-detail-content"
           >
             {/* Title + code badge */}
             <div className="flex flex-wrap items-start gap-3 mb-6">
@@ -371,7 +372,7 @@ const CurriculumPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-[#F8F8F8] p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-8" data-guide="curriculum-header">
             <button
               onClick={handleBackToSubjects}
               className="flex items-center gap-2 text-[#6F6F6F] hover:text-[#030E18] transition-colors mb-4"
@@ -408,7 +409,7 @@ const CurriculumPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-guide="curriculum-list">
               {curricula.map((curriculum) => (
                 <button
                   key={curriculum._id}

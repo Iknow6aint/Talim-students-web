@@ -248,6 +248,7 @@ const GroupChat = ({
                 className="flex-1 overflow-y-auto p-4 bg-gray-50 messages-container"
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
+                data-guide="messages-body"
             >
                 {isLoadingMore && (
                     <div className="flex justify-center py-4">

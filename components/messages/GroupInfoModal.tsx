@@ -39,7 +39,7 @@ export default function GroupInfoModal({
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div className="bg-white rounded-lg shadow-lg w-[650px] h-[450px] flex">
+            <div className="bg-white rounded-lg shadow-lg w-[650px] h-[450px] flex" data-guide="messages-group-info-modal">
                 {/* Sidebar */}
                 <div className="w-48 flex flex-col gap-2 bg-[#FDFDFD] border border-[#EEEEEE] text-[#878787] rounded-l-lg pt-6 p-3">
                     {menuItems.map((item) => (

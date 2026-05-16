@@ -101,7 +101,7 @@ export default function ChatSidebar({ onSelectChat, className = "" }: ChatSideba
       </div>
 
       {/* Search Section */}
-      <div className="p-3 sm:p-4 space-y-3 bg-white border-b border-gray-50">
+      <div className="p-3 sm:p-4 space-y-3 bg-white border-b border-gray-50" data-guide="messages-search-filter">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
           <Input
@@ -154,7 +154,7 @@ export default function ChatSidebar({ onSelectChat, className = "" }: ChatSideba
       )}
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto bg-white chat-list-container">
+      <div className="flex-1 overflow-y-auto bg-white chat-list-container" data-guide="messages-list">
         {/* Connection Status */}
         {!isConnected && (
           <div className="flex items-center justify-center p-6 text-gray-500">

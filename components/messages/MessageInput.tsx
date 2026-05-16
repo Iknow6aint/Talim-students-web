@@ -33,7 +33,7 @@ export default function MessageInput({
   };
 
   return (
-    <div className="p-4 bg-white border-t border-gray-100">
+    <div className="p-4 bg-white border-t border-gray-100" data-guide="messages-input">
       <div className="flex items-end space-x-3">
         {/* Attachment Button */}
         <button 

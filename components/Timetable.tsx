@@ -206,7 +206,7 @@ const Timetable: React.FC = () => {
   return (
     <div className="space-y-6 p-4 md:p-0">
       {/* Header with filters and controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 md:p-6 bg-gradient-to-r from-white to-blue-50 rounded-xl border border-[#F0F0F0] shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 md:p-6 bg-gradient-to-r from-white to-blue-50 rounded-xl border border-[#F0F0F0] shadow-sm" data-guide="timetable-header">
         <div className="flex items-center gap-3 md:gap-4">
           <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#003366] to-[#004080] rounded-xl flex items-center justify-center shadow-lg">
             <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
@@ -239,7 +239,7 @@ const Timetable: React.FC = () => {
           </div>
 
           {/* Time range filter */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-guide="timetable-filters">
             <label className="text-sm font-medium text-gray-700">Time:</label>
             <select
               value={`${timeRange.start}-${timeRange.end}`}
@@ -256,7 +256,7 @@ const Timetable: React.FC = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-guide="timetable-actions">
             {/* Mobile view toggle - only show on small screens */}
             <Button
               onClick={() => setIsMobileView(!isMobileView)}
@@ -354,7 +354,7 @@ const Timetable: React.FC = () => {
         </div>
       ) : (
         // Timetable Grid
-        <div className="bg-white rounded-xl border border-[#F0F0F0] overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-white rounded-xl border border-[#F0F0F0] overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300" data-guide="timetable-grid">
           {/* Mobile Card View */}
           {isMobileView ? (
             <div className="p-4 space-y-4">
@@ -499,7 +499,7 @@ const Timetable: React.FC = () => {
           )}
           
           {/* Summary footer */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t-2 border-gray-200">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t-2 border-gray-200" data-guide="timetable-summary">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3 text-gray-700">
                 <div className="w-10 h-10 bg-[#003366] rounded-full flex items-center justify-center">
