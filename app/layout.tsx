@@ -7,8 +7,32 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { ToastViewport } from "@/components/CustomToast";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useStudentOnboardingSync } from "@/hooks/useStudentOnboardingSync";
+
+const SYNC_THROTTLE_MS = 60_000;
+
+function OnboardingSyncEffect() {
+  const { user } = useAuthContext();
+  const { syncProgress } = useStudentOnboardingSync();
+  const pathname = usePathname();
+  const lastSyncAt = useRef(0);
+  const lastSyncPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const now = Date.now();
+    const pathChanged = lastSyncPath.current !== pathname;
+    if (!pathChanged && now - lastSyncAt.current < SYNC_THROTTLE_MS) return;
+
+    lastSyncPath.current = pathname;
+    lastSyncAt.current = now;
+    syncProgress().catch(() => {});
+  }, [pathname, user?.userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+}
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -59,6 +83,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <StudentOnboardingProvider>
+            <OnboardingSyncEffect />
             <AuthGuard>
               <WebSocketProvider>
                 {children}

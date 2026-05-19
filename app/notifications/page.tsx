@@ -8,6 +8,7 @@ import {
   useNotifications,
 } from "@/hooks/useNotifications";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useStudentOnboarding } from "@/contexts/OnboardingContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,7 @@ const getFilterLabel = (sortKey: SortKey) => {
 function NotificationsPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuthContext();
+  const { markStepComplete } = useStudentOnboarding();
   const {
     notifications,
     loading,
@@ -166,6 +168,10 @@ function NotificationsPage() {
       router.push("/");
     }
   }, [isAuthLoading, isAuthenticated, router]);
+
+  React.useEffect(() => {
+    markStepComplete("view-notifications");
+  }, [markStepComplete]);
 
   const filteredNotifications = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

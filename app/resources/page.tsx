@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import { ResourcesTable } from "@/components/resources/resources-table";
 import { Pagination } from "@/components/Subject/pagination";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Download } from "lucide-react";
 import Layout from "@/components/Layout";
+import { useStudentOnboarding } from "@/contexts/OnboardingContext";
 
 // const resources = [
 //   {
@@ -99,6 +101,12 @@ import Layout from "@/components/Layout";
 // ];
 
 export default function Page() {
+  const { markStepComplete } = useStudentOnboarding();
+
+  useEffect(() => {
+    markStepComplete("download-resource");
+  }, [markStepComplete]);
+
   return (
     <Layout>
       <div className="h-screen bg-[#F8F8F8] flex flex-col">

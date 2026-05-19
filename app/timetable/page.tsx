@@ -1,8 +1,17 @@
+"use client";
+
+import { useEffect } from "react";
 import Layout from "@/components/Layout";
 import Timetable from "@/components/Timetable";
-import React from "react";
+import { useStudentOnboarding } from "@/contexts/OnboardingContext";
 
-function page() {
+export default function TimetablePage() {
+  const { markStepComplete } = useStudentOnboarding();
+
+  useEffect(() => {
+    markStepComplete("view-timetable");
+  }, [markStepComplete]);
+
   return (
     <Layout>
       <main>
@@ -11,5 +20,3 @@ function page() {
     </Layout>
   );
 }
-
-export default page;
