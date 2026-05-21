@@ -3,6 +3,7 @@
 import { AuthProvider } from "@/contexts/AuthContext";
 import { StudentOnboardingProvider } from "@/contexts/OnboardingContext";
 import { WebSocketProvider } from "@/contexts/WebSocketContext";
+import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { ToastViewport } from "@/components/CustomToast";
@@ -79,19 +80,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('talim_student_theme');var d=t==='dark'||(t==='system'||!t)&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <StudentOnboardingProvider>
-            <OnboardingSyncEffect />
-            <AuthGuard>
-              <WebSocketProvider>
-                {children}
-                <ToastViewport />
-              </WebSocketProvider>
-            </AuthGuard>
-          </StudentOnboardingProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <StudentOnboardingProvider>
+              <OnboardingSyncEffect />
+              <AuthGuard>
+                <WebSocketProvider>
+                  {children}
+                  <ToastViewport />
+                </WebSocketProvider>
+              </AuthGuard>
+            </StudentOnboardingProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
