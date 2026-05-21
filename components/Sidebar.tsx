@@ -30,6 +30,7 @@ const menuItems: MenuItem[] = [
     iconPath: "/icons/messages.svg",
     link: "/messages",
   },
+  { label: "Settings", iconPath: "/icons/settings.svg", link: "/settings" },
 ];
 
 interface SidebarProps {
@@ -37,7 +38,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const pathname = usePathname();
   const { logout, user } = useAuthContext();
 
@@ -72,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="mb-4 border-b border-2 border-solid border-[#F1F1F1] -mx-4"></div>
         <div className="flex items-center px-2 py-3 border-2 border-solid border-[#F1F1F1] bg-[#FBFBFB] rounded-md mb-4">
           <Image
-            src={user?.schoolLogo}
+            src={user?.schoolLogo || "/unity.png"}
             alt={user?.schoolName || "School Logo"}
             width={40}
             height={40}
