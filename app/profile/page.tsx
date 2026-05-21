@@ -94,7 +94,7 @@ const Profile = () => {
         </div>
 
         {/* Profile Header */}
-        <div className="flex gap-4 bg-white py-10 sm:p-10 rounded-3xl justify-center sm:justify-start items-center">
+        <div className="flex flex-col sm:flex-row gap-4 bg-white py-8 px-6 sm:p-10 rounded-3xl justify-center sm:justify-start items-center sm:items-start">
           {isLoading ? (
             <>
               <div className="w-[100px] sm:w-[150px] h-[100px] sm:h-[150px] bg-gray-200 rounded-full animate-pulse"></div>
@@ -167,19 +167,19 @@ const Profile = () => {
             </>
           ) : (
             <>
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {tabs.map((tab) => (
                   <Button
                     key={tab.label}
                     onClick={() => setSelectedTab(tab.label)}
-                    className={`rounded-lg border border-[#F0F0F0] text-[#686868] hover:bg-gray-200 shadow-none items-center  ${
+                    className={`shrink-0 rounded-lg border border-[#F0F0F0] text-[#686868] hover:bg-gray-200 shadow-none items-center text-xs sm:text-sm px-2 sm:px-4 min-h-[44px] ${
                       selectedTab === tab.label
                         ? "bg-[#F0F0F0] border-[#ADBECE]"
                         : "bg-white"
                     }`}
                   >
-                    {tab.icon}
-                    {tab.label}
+                    <span className="shrink-0">{tab.icon}</span>
+                    <span className="ml-1.5 whitespace-nowrap">{tab.label}</span>
                   </Button>
                 ))}
               </div>

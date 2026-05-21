@@ -23,7 +23,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="font-manrope px-5 border-b sm:border-b-2 border-b-[#F0F0F0] dark:border-b-slate-800 bg-white dark:bg-[#1a2540] pb-4">
+    <header className="font-manrope px-3 sm:px-5 border-b sm:border-b-2 border-b-[#F0F0F0] dark:border-b-slate-800 bg-white dark:bg-[#1a2540] pb-2 sm:pb-4">
       <div className="flex flex-col sm:flex-row items-center w-full justify-end gap-4 py-3">
         <div className="flex items-center w-full sm:w-auto justify-between">
           <div

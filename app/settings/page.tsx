@@ -855,7 +855,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-6">
           Settings
         </h1>
@@ -893,13 +893,13 @@ export default function SettingsPage() {
                   <button
                     key={id}
                     onClick={() => setActiveSection(id)}
-                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors shrink-0 ${
+                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2.5 min-h-[44px] text-xs font-medium transition-colors shrink-0 ${
                       active
                         ? "bg-[#003366] dark:bg-blue-700 text-white"
                         : "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400"
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4 shrink-0" />
                     {label}
                   </button>
                 );

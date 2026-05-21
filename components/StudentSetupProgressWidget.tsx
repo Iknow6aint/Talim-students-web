@@ -118,7 +118,7 @@ export default function StudentSetupProgressWidget() {
         {remainingSteps.map((step) => (
           <div key={step.id} className="flex items-center gap-2 text-sm">
             <Circle className="h-4 w-4 text-[#A0A0A0] shrink-0" />
-            <span className="text-[#4B5563]">{step.label}</span>
+            <span className="text-[#4B5563] truncate">{step.label}</span>
           </div>
         ))}
       </div>

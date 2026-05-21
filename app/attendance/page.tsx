@@ -38,7 +38,7 @@ function AttendancePage() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col p-4 gap-6 overflow-y-auto bg-[#F8F8F8]">
+      <div className="h-full flex flex-col p-3 sm:p-4 gap-4 sm:gap-6 overflow-y-auto bg-[#F8F8F8]">
         {/* Page Header */}
         <div className="flex items-center gap-3">
           <div>
@@ -64,7 +64,7 @@ function AttendancePage() {
               </div>
             </Card>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <MetricCardSkeleton />
               <MetricCardSkeleton />
               <MetricCardSkeleton />
@@ -99,7 +99,7 @@ function AttendancePage() {
             <AttendanceOverview data={attendanceData} />
 
             {/* Metrics Grid - Only 4 cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <AttendanceMetricCard
                 type="attendance-rate"
                 value={attendanceData.attendanceRate}

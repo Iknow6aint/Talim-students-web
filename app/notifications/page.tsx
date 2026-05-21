@@ -408,8 +408,8 @@ function Tabs({
   onTabChange: (tab: TabKey) => void;
 }) {
   return (
-    <div className="overflow-x-auto border-b border-[#E8EDF5] p-3" data-guide="notifications-tabs">
-      <div className="grid min-w-[680px] grid-cols-6 rounded-xl border border-[#E5EAF2] bg-[#F8FAFD] p-1">
+    <div className="border-b border-[#E8EDF5] p-3" data-guide="notifications-tabs">
+      <div className="flex flex-wrap gap-1.5 rounded-xl border border-[#E5EAF2] bg-[#F8FAFD] p-1 sm:grid sm:grid-cols-6 sm:gap-0">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -418,16 +418,16 @@ function Tabs({
               type="button"
               onClick={() => onTabChange(tab.key)}
               className={cn(
-                "flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium transition",
+                "flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs sm:text-sm font-medium transition sm:h-10 sm:min-h-0",
                 isActive
                   ? "bg-white text-[#003366] shadow-sm ring-1 ring-[#DCE5F2]"
                   : "text-[#667085] hover:bg-white/80 hover:text-[#101828]",
               )}
             >
-              <span>{tab.label}</span>
+              <span className="whitespace-nowrap">{tab.label}</span>
               <span
                 className={cn(
-                  "min-w-6 rounded-full px-2 py-0.5 text-xs",
+                  "min-w-5 rounded-full px-1.5 py-0.5 text-xs",
                   isActive ? "bg-[#E7F0FF] text-[#003366]" : "bg-[#EDF2F8] text-[#667085]",
                 )}
               >

@@ -301,7 +301,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
   // render states
   if (loading) {
     return (
-      <div className="px-6 py-4 h-full">
+      <div className="px-3 sm:px-6 py-4 h-full">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2 text-[#030E18]">Loading...</h2>
           <p className="text-gray-600">
@@ -319,7 +319,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
 
   if (error) {
     return (
-      <div className="px-6 py-4 h-full">
+      <div className="px-3 sm:px-6 py-4 h-full">
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <BookOpen className="w-8 h-8 text-red-600" />
@@ -341,7 +341,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
 
   if (!classData || classData.courses.length === 0) {
     return (
-      <div className="px-6 py-4 h-full">
+      <div className="px-3 sm:px-6 py-4 h-full">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2 text-[#030E18]">No Courses</h2>
           <p className="text-gray-600">No courses found for this class.</p>
@@ -351,8 +351,8 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
   }
 
   return (
-    <div className="px-6 py-4 h-full">
-      <div className="mb-6" data-guide="subjects-header">
+    <div className="px-3 sm:px-6 py-4 h-full">
+      <div className="mb-4 sm:mb-6" data-guide="subjects-header">
         <h2 className="text-2xl font-medium mb-2 text-[#030E18]">Subjects</h2>
         <p className="text-gray-600">
           Explore your course curriculum and materials
@@ -382,7 +382,7 @@ const SubjectGrid: React.FC<{ classId?: string; termId?: string }> = ({
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-guide="subjects-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" data-guide="subjects-grid">
         {filteredCourses.map((course) => {
           // normalize nested id fields if backend returns plain ids
           const normalizedCourse: Course = {

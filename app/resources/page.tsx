@@ -110,7 +110,7 @@ export default function Page() {
   return (
     <Layout>
       <div className="h-screen bg-[#F8F8F8] flex flex-col">
-        <main className="container flex-grow overflow-y-auto mx-auto p-4 space-y-6 scrollbar-hide">
+        <main className="container flex-grow overflow-y-auto mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 scrollbar-hide">
           <div className="flex sm:flex-row flex-col gap-1 sm:gap-0 justify-between items-left sm:items-center">
             <div>
               <h1 className="text-xl text-[#2F2F2F] font-medium">Resources</h1>

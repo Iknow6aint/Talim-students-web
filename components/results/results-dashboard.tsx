@@ -130,16 +130,16 @@ function StatCard({
 }) {
   return (
     <Card className="border border-[#F0F0F0] shadow-none rounded-2xl">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
+      <CardContent className="p-3 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="text-2xl font-bold text-[#030E18] leading-tight tabular-nums">
+            <div className="text-xl sm:text-2xl font-bold text-[#030E18] leading-tight tabular-nums">
               {value}
             </div>
-            <div className="text-sm font-medium text-[#6F6F6F] mt-1">{label}</div>
+            <div className="text-xs sm:text-sm font-medium text-[#6F6F6F] mt-1 truncate">{label}</div>
             {sub && <div className="text-xs text-[#AAAAAA] mt-0.5">{sub}</div>}
           </div>
-          <div className="flex-shrink-0 p-2.5 bg-[#003366]/10 rounded-xl text-[#003366]">
+          <div className="flex-shrink-0 p-2 sm:p-2.5 bg-[#003366]/10 rounded-xl text-[#003366]">
             {icon}
           </div>
         </div>
@@ -438,7 +438,7 @@ export default function ResultsDashboard() {
   const term = termName(cumulativeGrade);
 
   return (
-    <div className="min-h-full p-5 sm:p-6 bg-[#F8F8F8] space-y-6">
+    <div className="min-h-full p-3 sm:p-5 lg:p-6 bg-[#F8F8F8] space-y-5 sm:space-y-6">
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -482,7 +482,7 @@ export default function ResultsDashboard() {
       ) : (
         <>
           {/* ── Stats row ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <StatCard
               icon={<BarChart3 className="w-5 h-5" />}
               value={
