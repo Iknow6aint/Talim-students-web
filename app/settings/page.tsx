@@ -916,3 +916,5 @@ export default function SettingsPage() {
         <ChangePasswordModal onClose={() => setShowPwdModal(false)} />
       )}
     </div>
+  );
+}

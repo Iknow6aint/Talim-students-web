@@ -29,7 +29,7 @@ function Layout({ children }: LayoutProps) {
           onClose={() => setIsSidebarOpen(false)}
         />
       </div>
-      <div className="bg-[#F8F8F8] flex flex-col flex-1 border h-full overflow-hidden">
+      <div className="bg-[#F8F8F8] dark:bg-[#0f1629] flex flex-col flex-1 border border-[#F0F0F0] dark:border-slate-800 h-full overflow-hidden">
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="flex-1 h-full overflow-y-auto">{children}</div>
       </div>

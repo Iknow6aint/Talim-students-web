@@ -66,55 +66,271 @@
   }
 }
 
-/* Dark mode: semantic background/text overrides */
-html.dark body { background-color: #0b1120; color: #e2e8f0; }
-html.dark .bg-white { background-color: #0f172a; }
-html.dark .bg-gray-50 { background-color: #1e293b; }
-html.dark .bg-gray-100 { background-color: #1e293b; }
-html.dark .bg-gray-200 { background-color: #334155; }
+/* ============================================================
+   DARK MODE — mirrors parents app strategy
+   html.dark .class  →  override standard Tailwind utilities
+   html.dark [class*="..."]  →  override arbitrary hex classes
+   Specificity: html.dark + class/attr = (0,2,1) beats utilities (0,1,0)
+   ============================================================ */
 
-/* Hex-value bg overrides used in student app */
-html.dark [class*="bg-[#FBFBFB]"] { background-color: #0f172a !important; }
-html.dark [class*="bg-[#F8F8F8]"] { background-color: #1e293b !important; }
-html.dark [class*="bg-[#F5F5F5]"] { background-color: #1e293b !important; }
-html.dark [class*="bg-[#F1F1F1]"] { background-color: #334155 !important; }
-html.dark [class*="bg-[#F0F0F0]"] { background-color: #334155 !important; }
-html.dark [class*="bg-[#FAFAFA]"] { background-color: #1e293b !important; }
-html.dark [class*="bg-[#003366]"] { background-color: #1e40af !important; }
-html.dark [class*="bg-[#002244]"] { background-color: #1e3a8a !important; }
-html.dark [class*="bg-[#EEF3F9]"] { background-color: #1e3a8a !important; }
-html.dark [class*="bg-[#EAF2FB]"] { background-color: #1e3a8a !important; }
-
-/* Border overrides */
-html.dark [class*="border-[#F1F1F1]"] { border-color: #334155 !important; }
-html.dark [class*="border-[#F0F0F0]"] { border-color: #334155 !important; }
-html.dark [class*="border-[#003366]"] { border-color: #3b82f6 !important; }
-
-/* Text color overrides */
-html.dark [class*="text-[#030E18]"] { color: #e2e8f0 !important; }
-html.dark [class*="text-[#030e18]"] { color: #e2e8f0 !important; }
-html.dark .text-gray-600 { color: #94a3b8; }
-html.dark .text-gray-700 { color: #cbd5e1; }
-html.dark .text-gray-500 { color: #94a3b8; }
-html.dark .text-gray-900 { color: #f1f5f9; }
-html.dark [class*="text-[#6F6F6F]"] { color: #94a3b8 !important; }
-html.dark [class*="text-[#878787]"] { color: #94a3b8 !important; }
-
-/* ShadCN component overrides */
-html.dark .bg-card { background-color: #0f172a; }
-html.dark .bg-background { background-color: #0b1120; }
-html.dark .bg-muted { background-color: #1e293b; }
-html.dark .bg-secondary { background-color: #1e293b; }
-html.dark .border-border { border-color: #334155; }
-html.dark .border-input { border-color: #334155; }
-html.dark .text-foreground { color: #e2e8f0; }
-html.dark .text-muted-foreground { color: #94a3b8; }
-html.dark input, html.dark textarea, html.dark select {
-  background-color: #1e293b;
-  border-color: #334155;
-  color: #e2e8f0;
+/* Smooth transition for theme-affected properties */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
 }
-html.dark input::placeholder, html.dark textarea::placeholder { color: #64748b; }
+/* Don't interfere with motion/animation classes */
+*[class*="transition-"],
+*[class*="animate-"],
+*[class*="duration-"] {
+  transition-property: revert;
+  transition-duration: revert;
+}
+
+/* === Base === */
+html.dark {
+  color-scheme: dark;
+}
+html.dark body {
+  background-color: #0f1629;
+  color: #f1f5f9;
+}
+
+/* ── Page / layout backgrounds ── */
+html.dark .min-h-screen,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #0f1629;
+}
+html.dark [class*="bg-[#F8F8F8]"],
+html.dark [class*="bg-[#f8f8f8]"],
+html.dark [class*="bg-[#F9F9F9]"],
+html.dark [class*="bg-[#FDFDFD]"],
+html.dark [class*="bg-[#F7F7F7]"] {
+  background-color: #0f1629;
+}
+
+/* ── Card / surface backgrounds ── */
+html.dark .bg-white {
+  background-color: #1a2540;
+}
+html.dark .bg-gray-200 {
+  background-color: #1e2d47;
+}
+
+/* ── Subtle tint backgrounds ── */
+html.dark [class*="bg-[#FBFBFB]"],
+html.dark [class*="bg-[#fbfbfb]"],
+html.dark [class*="bg-[#FBFCFE]"],
+html.dark [class*="bg-[#F9FAFB]"],
+html.dark [class*="bg-[#F8FAFD]"],
+html.dark [class*="bg-[#F8FBFF]"],
+html.dark [class*="bg-[#F7F9FC]"],
+html.dark [class*="bg-[#F4F8FF]"],
+html.dark [class*="bg-[#F3F3F3]"],
+html.dark [class*="bg-[#F2F6FB]"],
+html.dark [class*="bg-[#F0F0F0]"] {
+  background-color: #152238;
+}
+html.dark [class*="bg-[#EEF3F9]"],
+html.dark [class*="bg-[#EDF2F8]"],
+html.dark [class*="bg-[#EFF5FF]"],
+html.dark [class*="bg-[#E7F0FF]"],
+html.dark [class*="bg-[#EAF2FB]"],
+html.dark [class*="bg-[#eaf2fb]"] {
+  background-color: #1e2d47;
+}
+
+/* ── Status / semantic tints ── */
+html.dark .bg-green-50,
+html.dark .bg-emerald-50 { background-color: #042516; }
+html.dark .bg-red-50     { background-color: #2a0a0a; }
+html.dark .bg-orange-50  { background-color: #2a1000; }
+html.dark .bg-yellow-50,
+html.dark [class*="bg-[#FFF8E8]"] { background-color: #1f1600; }
+html.dark .bg-blue-50,
+html.dark .bg-blue-100   { background-color: #0e2040; }
+html.dark .bg-purple-50,
+html.dark .bg-violet-50  { background-color: #1c1040; }
+html.dark .bg-slate-50   { background-color: #0f172a; }
+html.dark .bg-gray-100   { background-color: #1a2540; }
+html.dark .bg-red-100    { background-color: #2a0a0a; }
+html.dark .bg-green-100  { background-color: #042516; }
+html.dark .bg-orange-100 { background-color: #2a1000; }
+html.dark .bg-yellow-100 { background-color: #1f1600; }
+html.dark .bg-amber-100  { background-color: #1f1200; }
+html.dark .bg-pink-50    { background-color: #2a0016; }
+
+/* ── Dark brand shades used as card bgs (keep dark, don't strip) ── */
+html.dark [class*="bg-[#003366]"] { background-color: #1e3a6e; }
+html.dark [class*="bg-[#002244]"],
+html.dark [class*="bg-[#002B5B]"],
+html.dark [class*="bg-[#00264D]"] { background-color: #152d5a; }
+html.dark [class*="bg-[#0B1220]"] { background-color: #0e1a2e; }
+html.dark [class*="bg-[#030E18]"] { background-color: #0e1a2e; }
+
+/* ── Active sidebar/pill (BFCCD8, ADBECE) ── */
+html.dark [class*="bg-[#ADBECE]"],
+html.dark [class*="bg-[#CBD5E1]"] { background-color: #1e3a6e; }
+
+/* ── Skeleton/pulse ── */
+html.dark .bg-gray-300 { background-color: #2a3a5a; }
+
+/* ── Borders ── */
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300 { border-color: #2a3a5a; }
+html.dark [class*="border-[#F0F0F0]"],
+html.dark [class*="border-[#F1F1F1]"],
+html.dark [class*="border-[#F5F5F5]"],
+html.dark [class*="border-[#E3E3E3]"],
+html.dark [class*="border-[#E8E8E8]"],
+html.dark [class*="border-[#EEEEEE]"],
+html.dark [class*="border-[#D9D9D9]"],
+html.dark [class*="border-[#E5E7EB]"],
+html.dark [class*="border-[#E5EAF2]"],
+html.dark [class*="border-[#E8EDF5]"],
+html.dark [class*="border-[#EEF2F7]"],
+html.dark [class*="border-[#DCE5F2]"],
+html.dark [class*="border-[#DDE8F6]"] { border-color: #2a3a5a; }
+html.dark [class*="border-[#BFD7FF]"] { border-color: #1e3a6e; }
+html.dark [class*="border-[#003366]"],
+html.dark [class*="border-[#002244]"],
+html.dark [class*="border-[#002B5B]"] { border-color: #3b6fd4; }
+html.dark [class*="border-[#8C8C8C]"] { border-color: #475569; }
+html.dark [class*="border-[#ADBECE]"] { border-color: #2a3a5a; }
+
+/* Dividers */
+html.dark .divide-gray-100 > * + *,
+html.dark .divide-gray-200 > * + * { border-color: #2a3a5a; }
+
+/* ── Primary text (near-black → near-white) ── */
+html.dark .text-gray-900,
+html.dark .text-gray-800 { color: #f1f5f9; }
+html.dark [class*="text-[#030E18]"],
+html.dark [class*="text-[#030e18]"],
+html.dark [class*="text-[#0B1220]"],
+html.dark [class*="text-[#101828]"],
+html.dark [class*="text-[#0A2343]"],
+html.dark [class*="text-[#102A43]"],
+html.dark [class*="text-[#131616]"],
+html.dark [class*="text-[#2F2F2F]"],
+html.dark [class*="text-[#434343]"],
+html.dark [class*="text-[#444444]"],
+html.dark [class*="text-[#454545]"] { color: #f1f5f9; }
+
+/* ── Secondary text ── */
+html.dark .text-gray-700,
+html.dark .text-gray-600 { color: #94a3b8; }
+html.dark [class*="text-[#344054]"],
+html.dark [class*="text-[#4B5563]"] { color: #cbd5e1; }
+html.dark [class*="text-[#667085]"],
+html.dark [class*="text-[#738195]"],
+html.dark [class*="text-[#8A95A5]"] { color: #cbd5e1; }
+
+/* ── Muted / placeholder text ── */
+html.dark .text-gray-500,
+html.dark .text-gray-400 { color: #64748b; }
+html.dark [class*="text-[#525252]"],
+html.dark [class*="text-[#545454]"],
+html.dark [class*="text-[#5D5D5D]"],
+html.dark [class*="text-[#606060]"],
+html.dark [class*="text-[#616161]"],
+html.dark [class*="text-[#686868]"],
+html.dark [class*="text-[#6F6F6F]"],
+html.dark [class*="text-[#7B7B7B]"],
+html.dark [class*="text-[#7D7D7D]"],
+html.dark [class*="text-[#858585]"],
+html.dark [class*="text-[#878787]"],
+html.dark [class*="text-[#898989]"],
+html.dark [class*="text-[#8C8C8C]"],
+html.dark [class*="text-[#909090]"],
+html.dark [class*="text-[#98A2B3]"],
+html.dark [class*="text-[#A0A0A0]"],
+html.dark [class*="text-[#AAAAAA]"],
+html.dark [class*="text-[#ADADAD]"],
+html.dark [class*="text-[#CCCCCC]"] { color: #94a3b8; }
+
+/* ── Brand text (dark navy → light blue) ── */
+html.dark [class*="text-[#003366]"]:not(button):not(a),
+html.dark [class*="text-[#002244]"]:not(button):not(a),
+html.dark [class*="text-[#002B5B]"]:not(button):not(a),
+html.dark [class*="text-[#0A2343]"]:not(button):not(a) { color: #93c5fd; }
+html.dark [class*="text-[#99CCFF]"] { color: #93c5fd; }
+html.dark [class*="text-[#0B74DE]"] { color: #60a5fa; }
+
+/* ── Status text ── */
+html.dark .text-green-700,
+html.dark .text-green-600  { color: #4ade80; }
+html.dark .text-red-700,
+html.dark .text-red-600    { color: #f87171; }
+html.dark .text-orange-700,
+html.dark .text-orange-600 { color: #fb923c; }
+html.dark .text-yellow-700,
+html.dark .text-yellow-600 { color: #fbbf24; }
+html.dark .text-blue-700,
+html.dark .text-blue-600   { color: #60a5fa; }
+html.dark .text-purple-700,
+html.dark .text-purple-600 { color: #a78bfa; }
+html.dark .text-slate-700,
+html.dark .text-slate-600  { color: #94a3b8; }
+html.dark [class*="text-[#F39C12]"],
+html.dark [class*="text-[#B88916]"],
+html.dark [class*="text-[#7A5600]"],
+html.dark [class*="text-[#F4B740]"],
+html.dark [class*="text-[#FFE3A0]"] { color: #fbbf24; }
+html.dark [class*="text-[#993333]"] { color: #f87171; }
+
+/* ── Inputs & forms ── */
+html.dark input:not([type="range"]),
+html.dark textarea,
+html.dark select {
+  background-color: #1a2540;
+  border-color: #2a3a5a;
+  color: #f1f5f9;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #475569; }
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+/* ── Hover overrides ── */
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover { background-color: #1e3050; }
+
+/* ── Shadows ── */
+html.dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4); }
+html.dark .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4); }
+html.dark .shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4); }
+html.dark .shadow-xl { box-shadow: 0 20px 25px rgba(0,0,0,0.5), 0 8px 10px rgba(0,0,0,0.4); }
+
+/* ── Tables ── */
+html.dark table  { background-color: #1a2540; color: #f1f5f9; }
+html.dark thead  { background-color: #152238; }
+html.dark tbody tr:hover { background-color: #1e3050; }
+html.dark th, html.dark td { border-color: #2a3a5a; }
+
+/* ── ShadCN CSS variable component overrides ── */
+html.dark .bg-card       { background-color: #1a2540; }
+html.dark .bg-background { background-color: #0f1629; }
+html.dark .bg-muted      { background-color: #152238; }
+html.dark .bg-secondary  { background-color: #1e2d47; }
+html.dark .border-border { border-color: #2a3a5a; }
+html.dark .border-input  { border-color: #2a3a5a; }
+html.dark .text-foreground      { color: #f1f5f9; }
+html.dark .text-muted-foreground{ color: #94a3b8; }
+
+/* ── Scrollbars ── */
+html.dark ::-webkit-scrollbar       { width: 5px; height: 5px; }
+html.dark ::-webkit-scrollbar-track { background: #0f1629; }
+html.dark ::-webkit-scrollbar-thumb { background: #2a3a5a; border-radius: 3px; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #3b4f75; }
 
 @layer base {
   * {
