@@ -41,7 +41,22 @@ export const useAuth = () => {
         );
       }
 
-      router.push("/onboarding");
+      // Check whether this student has already completed onboarding
+      const userId = userData?.userId || (userData as any)?.id;
+      let postLoginRoute = "/onboarding";
+      if (userId) {
+        try {
+          const raw = localStorage.getItem(`student_onboarding_${userId}`);
+          const onboardingState = raw ? JSON.parse(raw) : null;
+          if (onboardingState?.setupDismissed || onboardingState?.phase1Completed) {
+            postLoginRoute = "/dashboard";
+          }
+        } catch {
+          // fall through to /onboarding
+        }
+      }
+
+      router.push(postLoginRoute);
       return userData;
     } catch (error) {
       throw error;

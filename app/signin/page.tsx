@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, ShieldAlert, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import ModernLoader from "@/components/ModernLoader";
 
 type LoginError =
@@ -19,7 +21,16 @@ interface FormData {
 
 const SignInPage: React.FC = () => {
   const { login, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect away if already signed in
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, authLoading, router]);
   const [loginError, setLoginError] = useState<LoginError | null>(null);
   const [formData, setFormData] = useState<FormData>({
     email: "",

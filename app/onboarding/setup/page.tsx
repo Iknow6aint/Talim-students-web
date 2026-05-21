@@ -16,6 +16,7 @@ import {
   StudentOnboardingStepId,
   useStudentOnboarding,
 } from "@/contexts/OnboardingContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const STEP_ICONS: Record<StudentOnboardingStepId, React.ReactNode> = {
   "student-profile": <CheckCircle2 className="h-5 w-5" />,
@@ -26,6 +27,7 @@ const STEP_ICONS: Record<StudentOnboardingStepId, React.ReactNode> = {
 
 export default function StudentOnboardingSetup() {
   const router = useRouter();
+  const { isLoading: authLoading } = useAuthContext();
   const {
     isHydrated,
     phase1Completed,
@@ -39,14 +41,15 @@ export default function StudentOnboardingSetup() {
 
   const [navigating, setNavigating] = useState<StudentOnboardingStepId | null>(null);
 
-  // Guard: phase 1 must be done first
+  // Guard: wait for auth + onboarding state to fully load before checking phase1
   useEffect(() => {
-    if (isHydrated && !phase1Completed) {
+    if (authLoading || !isHydrated) return;
+    if (!phase1Completed) {
       router.replace("/onboarding");
     }
-  }, [isHydrated, phase1Completed, router]);
+  }, [authLoading, isHydrated, phase1Completed, router]);
 
-  if (!isHydrated || !phase1Completed) {
+  if (authLoading || !isHydrated || !phase1Completed) {
     return (
       <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />
