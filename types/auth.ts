@@ -1,6 +1,7 @@
 // types/auth.ts
 export interface LoginCredentials {
-  email: string;
+  identifier?: string;
+  email?: string;
   password: string;
   deviceToken: string;
   platform: string;
@@ -20,6 +21,7 @@ export interface User {
   schoolId?: string;
   schoolName?: string;
   studentId?: string; // The actual student profile ID
+  admissionNumber?: string;
   [key: string]: any;
 }
 
@@ -36,6 +38,7 @@ export interface StudentDetails {
   lastName: string;
   role: string;
   schoolId: string;
+  admissionNumber?: string;
   phoneNumber: string;
   isActive: boolean;
   isEmailVerified: boolean;

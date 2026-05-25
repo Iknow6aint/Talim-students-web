@@ -14,7 +14,7 @@ type LoginError =
   | { kind: "unknown"; message: string };
 
 interface FormData {
-  email: string;
+  identifier: string;
   password: string;
   rememberMe: boolean;
 }
@@ -33,7 +33,7 @@ const SignInPage: React.FC = () => {
   }, [isAuthenticated, authLoading, router]);
   const [loginError, setLoginError] = useState<LoginError | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    email: "",
+    identifier: "",
     password: "",
     rememberMe: false,
   });
@@ -44,7 +44,8 @@ const SignInPage: React.FC = () => {
 
     try {
       await login({
-        email: formData.email,
+        identifier: formData.identifier.trim(),
+        email: formData.identifier.trim(),
         password: formData.password,
         deviceToken: "web-token",
         platform: "web",
@@ -122,8 +123,8 @@ const SignInPage: React.FC = () => {
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <p className="text-sm text-amber-700">
-                  Incorrect email or password. Please check your credentials and
-                  try again.
+                  Incorrect email, student ID, or password. Please check
+                  your credentials and try again.
                 </p>
               </div>
             </div>
@@ -140,21 +141,24 @@ const SignInPage: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
-            {/* Email */}
+            {/* Identifier */}
             <div className="space-y-1.5">
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-sm font-medium text-[#030E18]"
               >
-                Email address
+                Email or Student ID
               </label>
               <input
-                id="email"
-                type="email"
-                placeholder="you@school.com"
-                value={formData.email}
+                id="identifier"
+                type="text"
+                placeholder="you@school.com or 260100001"
+                value={formData.identifier}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    identifier: e.target.value,
+                  }))
                 }
                 required
                 disabled={isLoading}
