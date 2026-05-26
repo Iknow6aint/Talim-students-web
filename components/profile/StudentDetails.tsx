@@ -59,6 +59,7 @@ const StudentDetails = () => {
   }
 
   const details = [
+    { label: "Enrollment ID:", value: studentDetails.admissionNumber || "N/A" },
     { label: "First Name:", value: studentDetails.firstName || "N/A" },
     { label: "Last Name:", value: studentDetails.lastName || "N/A" },
     { label: "Phone Number:", value: studentDetails.phoneNumber || "N/A" },

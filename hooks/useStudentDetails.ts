@@ -10,6 +10,7 @@ interface StudentDetails {
   email: string;
   firstName: string;
   lastName: string;
+  admissionNumber?: string;
   phoneNumber: string;
   isActive: boolean;
   isEmailVerified: boolean;
@@ -40,9 +41,12 @@ export const useStudentDetails = () => {
         // Check cache first
         const cachedDetails = localStorage.getItem('studentDetails');
         if (cachedDetails) {
-          setStudentDetails(JSON.parse(cachedDetails));
-          setLoading(false);
-          return;
+          const parsedDetails = JSON.parse(cachedDetails);
+          if (parsedDetails.admissionNumber) {
+            setStudentDetails(parsedDetails);
+            setLoading(false);
+            return;
+          }
         }
 
         // Fetch fresh data if no cache
