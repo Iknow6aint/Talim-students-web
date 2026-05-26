@@ -152,7 +152,7 @@ const SignInPage: React.FC = () => {
               <input
                 id="identifier"
                 type="text"
-                placeholder="you@school.com or 260100001"
+                placeholder="you@school.com or ESEC-260100001"
                 value={formData.identifier}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -164,6 +164,9 @@ const SignInPage: React.FC = () => {
                 disabled={isLoading}
                 className="w-full h-10 px-3 border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:border-[#003366] transition-all disabled:opacity-50"
               />
+              <p className="text-xs text-[#6F6F6F]">
+                Student ID format: school slug-student ID, e.g. ESEC-260100001.
+              </p>
             </div>
 
             {/* Password */}
